@@ -1,909 +1,638 @@
-// 理想伴侣画像测试 - 主逻辑文件
-// 版本: 2.0 | 最后更新: 2026-03-06
-// 注意: 此文件处理测试流程控制、用户交互和页面切换
+// script.js - 测试流程控制器
+'use strict';
 
-// 全局状态管理
-const AppState = {
-    // 测试状态
-    currentQuestionIndex: 0,
-    userAnswers: new Array(QUESTIONS.length).fill(null),
-    testStarted: false,
-    testCompleted: false,
-    isLoading: true,
-    
-    // 维度分数
-    dimensionScores: {
-        personality: { total: 0, count: 0, average: 0 },
-        communication: { total: 0, count: 0, average: 0 },
-        emotional: { total: 0, count: 0, average: 0 },
-        values: { total: 0, count: 0, average: 0 },
-        lifestyle: { total: 0, count: 0, average: 0 },
-        relationship: { total: 0, count: 0, average: 0 }
-    },
-    
-    // 当前会话
-    sessionId: null,
-    startTime: null,
-    
-    // 初始化
-    init() {
-        this.sessionId = this.generateSessionId();
-        this.startTime = new Date();
+// MVVM 架构 - ViewModel
+class TestViewModel {
+    constructor() {
+        this.currentQuestionIndex = 0;
+        this.userAnswers = new Array(Questions.length).fill(null);
+        this.calculator = new IdealPartnerCalculator();
+        this.isTestCompleted = false;
+        this.isPaused = false;
         
-        // 从本地存储恢复进度（如果存在）
-        this.loadProgress();
-    },
+        this.initBindings();
+        this.initEventListeners();
+        this.renderCoverPage();
+    }
     
-    // 生成唯一会话ID
-    generateSessionId() {
-        return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    },
-    
-    // 保存进度到本地存储
-    saveProgress() {
-        const progress = {
-            sessionId: this.sessionId,
-            currentQuestionIndex: this.currentQuestionIndex,
-            userAnswers: this.userAnswers,
-            testStarted: this.testStarted,
-            saveTime: new Date().toISOString()
+    // 初始化数据绑定
+    initBindings() {
+        // 页面元素
+        this.elements = {
+            coverPage: document.getElementById('cover-page'),
+            testPage: document.getElementById('test-page'),
+            resultPage: document.getElementById('result-page'),
+            startTestBtn: document.getElementById('start-test-btn'),
+            currentQuestion: document.getElementById('current-question'),
+            totalQuestions: document.getElementById('total-questions'),
+            progressFill: document.getElementById('progress-fill'),
+            sectionTitle: document.getElementById('section-title'),
+            sectionDescription: document.getElementById('section-description'),
+            questionText: document.getElementById('question-text'),
+            optionsContainer: document.getElementById('options-container'),
+            prevBtn: document.getElementById('prev-btn'),
+            nextBtn: document.getElementById('next-btn'),
+            skipBtn: document.getElementById('skip-btn'),
+            questionCounter: document.getElementById('question-counter'),
+            restartBtn: document.getElementById('restart-btn'),
+            pauseBtn: document.getElementById('pause-btn'),
+            pauseModal: document.getElementById('pause-modal'),
+            resumeBtn: document.getElementById('resume-btn'),
+            restartFromModalBtn: document.getElementById('restart-from-modal-btn'),
+            retakeTestBtn: document.getElementById('retake-test-btn'),
+            shareResultBtn: document.getElementById('share-result-btn'),
+            shareModal: document.getElementById('share-modal'),
+            copyLinkBtn: document.getElementById('copy-link-btn'),
+            closeModals: document.querySelectorAll('.close-modal')
         };
         
-        try {
-            localStorage.setItem('idealPartnerProgress', JSON.stringify(progress));
-        } catch (e) {
-            console.warn('无法保存进度到本地存储:', e);
-        }
-    },
-    
-    // 从本地存储加载进度
-    loadProgress() {
-        try {
-            const saved = localStorage.getItem('idealPartnerProgress');
-            if (saved) {
-                const progress = JSON.parse(saved);
-                
-                // 检查是否为今天的进度（过期一天就重置）
-                const saveDate = new Date(progress.saveTime);
-                const today = new Date();
-                const isSameDay = saveDate.toDateString() === today.toDateString();
-                
-                if (isSameDay) {
-                    this.sessionId = progress.sessionId;
-                    this.currentQuestionIndex = progress.currentQuestionIndex;
-                    this.userAnswers = progress.userAnswers;
-                    this.testStarted = progress.testStarted;
-                } else {
-                    this.clearProgress();
-                }
-            }
-        } catch (e) {
-            console.warn('无法从本地存储加载进度:', e);
-        }
-    },
-    
-    // 清除进度
-    clearProgress() {
-        try {
-            localStorage.removeItem('idealPartnerProgress');
-        } catch (e) {
-            console.warn('无法清除本地存储:', e);
-        }
-        
-        this.currentQuestionIndex = 0;
-        this.userAnswers = new Array(QUESTIONS.length).fill(null);
-        this.testStarted = false;
-        this.testCompleted = false;
-    },
-    
-    // 记录答案
-    recordAnswer(questionIndex, optionIndex) {
-        if (questionIndex >= 0 && questionIndex < QUESTIONS.length) {
-            this.userAnswers[questionIndex] = optionIndex;
-            this.saveProgress();
-        }
-    },
-    
-    // 获取当前问题
-    getCurrentQuestion() {
-        return QUESTIONS[this.currentQuestionIndex];
-    },
-    
-    // 计算维度分数
-    calculateDimensionScores() {
-        // 重置分数
-        for (const dimension in this.dimensionScores) {
-            this.dimensionScores[dimension] = { total: 0, count: 0, average: 0 };
-        }
-        
-        // 遍历所有已回答的问题
-        for (let i = 0; i < this.userAnswers.length; i++) {
-            const answerIndex = this.userAnswers[i];
-            
-            if (answerIndex !== null) {
-                const question = QUESTIONS[i];
-                const selectedOption = question.options[answerIndex];
-                
-                // 累加每个维度的分数
-                for (const dimension in selectedOption.dimensionScores) {
-                    this.dimensionScores[dimension].total += selectedOption.dimensionScores[dimension];
-                    this.dimensionScores[dimension].count++;
-                }
-            }
-        }
-        
-        // 计算平均分
-        for (const dimension in this.dimensionScores) {
-            const dim = this.dimensionScores[dimension];
-            dim.average = dim.count > 0 ? dim.total / dim.count : 0;
-        }
-        
-        return this.dimensionScores;
-    },
-    
-    // 计算匹配度
-    calculateCompatibility() {
-        this.calculateDimensionScores();
-        
-        // 计算综合匹配度（0-100分）
-        let totalAverage = 0;
-        let dimensionCount = 0;
-        
-        for (const dimension in this.dimensionScores) {
-            const avg = this.dimensionScores[dimension].average;
-            if (avg > 0) {
-                // 将1-4分的平均分转换为0-100分
-                const normalizedScore = ((avg - 1) / 3) * 100;
-                totalAverage += normalizedScore;
-                dimensionCount++;
-            }
-        }
-        
-        const overallScore = dimensionCount > 0 ? Math.round(totalAverage / dimensionCount) : 0;
-        return overallScore;
-    },
-    
-    // 获取已回答问题数量
-    getAnsweredCount() {
-        return this.userAnswers.filter(answer => answer !== null).length;
-    },
-    
-    // 检查是否所有问题都已回答
-    areAllQuestionsAnswered() {
-        return this.userAnswers.every(answer => answer !== null);
-    },
-    
-    // 重置测试
-    resetTest() {
-        this.clearProgress();
-        this.currentQuestionIndex = 0;
-        this.testStarted = false;
-        this.testCompleted = false;
-        this.sessionId = this.generateSessionId();
-        this.startTime = new Date();
+        // 更新总题目数
+        this.elements.totalQuestions.textContent = Questions.length;
     }
-};
-
-// DOM元素缓存
-const DOM = {
-    // 视图容器
-    coverView: document.getElementById('coverView'),
-    questionView: document.getElementById('questionView'),
-    loadingResultView: document.getElementById('loadingResultView'),
-    resultView: document.getElementById('resultView'),
     
-    // 进度指示器
-    progressContainer: document.getElementById('progressContainer'),
-    progressFill: document.getElementById('progressFill'),
-    currentQuestion: document.getElementById('currentQuestion'),
-    totalQuestions: document.getElementById('totalQuestions'),
-    currentDimension: document.getElementById('currentDimension'),
-    dimensionIndicator: document.getElementById('dimensionIndicator'),
-    
-    // 问题视图元素
-    questionNumber: document.getElementById('questionNumber'),
-    questionTitle: document.getElementById('questionTitle'),
-    questionHint: document.getElementById('questionHint'),
-    dimensionName: document.getElementById('dimensionName'),
-    optionsContainer: document.getElementById('optionsContainer'),
-    prevButton: document.getElementById('prevButton'),
-    nextButton: document.getElementById('nextButton'),
-    currentPosition: document.getElementById('currentPosition'),
-    
-    // 按钮
-    startButton: document.getElementById('startButton'),
-    retryButton: document.getElementById('retryButton'),
-    shareButton: document.getElementById('shareButton'),
-    downloadButton: document.getElementById('downloadButton'),
-    
-    // 加载屏幕
-    loadingScreen: document.getElementById('loadingScreen'),
-    
-    // 结果视图元素
-    resultSubtitle: document.getElementById('resultSubtitle'),
-    resultDate: document.getElementById('resultDate'),
-    matchScore: document.getElementById('matchScore'),
-    scoreDescription: document.getElementById('scoreDescription'),
-    compatibilityScore: document.getElementById('compatibilityScore'),
-    valuesScore: document.getElementById('valuesScore'),
-    emotionalScore: document.getElementById('emotionalScore'),
-    personalityTraits: document.getElementById('personalityTraits'),
-    communicationStyle: document.getElementById('communicationStyle'),
-    emotionalNeeds: document.getElementById('emotionalNeeds'),
-    coreValues: document.getElementById('coreValues'),
-    lifestyleAttitude: document.getElementById('lifestyleAttitude'),
-    relationshipExpectations: document.getElementById('relationshipExpectations'),
-    recognitionTips: document.getElementById('recognitionTips'),
-    relationshipTips: document.getElementById('relationshipTips'),
-    selfPreparation: document.getElementById('selfPreparation'),
-    
-    // 分析卡片分数
-    traitScore: document.getElementById('traitScore'),
-    communicationScore: document.getElementById('communicationScore'),
-    emotionalNeedScore: document.getElementById('emotionalNeedScore'),
-    valuesScoreDetailed: document.getElementById('valuesScoreDetailed'),
-    lifestyleScore: document.getElementById('lifestyleScore'),
-    relationshipScore: document.getElementById('relationshipScore'),
-    
-    // 标签容器
-    personalityTags: document.getElementById('personalityTags'),
-    communicationTags: document.getElementById('communicationTags'),
-    emotionalTags: document.getElementById('emotionalTags'),
-    valuesTags: document.getElementById('valuesTags'),
-    lifestyleTags: document.getElementById('lifestyleTags'),
-    relationshipTags: document.getElementById('relationshipTags'),
-    
-    // 分析进度
-    analyzingText: document.getElementById('analyzingText'),
-    analyzingBar: document.getElementById('analyzingBar')
-};
-
-// 视图管理器
-const ViewManager = {
-    currentView: 'cover',
-    
-    // 切换到指定视图
-    switchTo(viewName) {
-        // 隐藏所有视图
-        DOM.coverView.classList.remove('active');
-        DOM.questionView.classList.remove('active');
-        DOM.loadingResultView.classList.remove('active');
-        DOM.resultView.classList.remove('active');
+    // 初始化事件监听
+    initEventListeners() {
+        // 开始测试
+        this.elements.startTestBtn.addEventListener('click', () => this.startTest());
         
-        // 显示指定视图
-        switch(viewName) {
-            case 'cover':
-                DOM.coverView.classList.add('active');
-                DOM.progressContainer.style.display = 'none';
-                break;
-            case 'question':
-                DOM.questionView.classList.add('active');
-                DOM.progressContainer.style.display = 'block';
-                this.updateProgress();
-                break;
-            case 'loadingResult':
-                DOM.loadingResultView.classList.add('active');
-                DOM.progressContainer.style.display = 'none';
-                break;
-            case 'result':
-                DOM.resultView.classList.add('active');
-                DOM.progressContainer.style.display = 'none';
-                break;
-        }
+        // 导航按钮
+        this.elements.prevBtn.addEventListener('click', () => this.navigateToPrevious());
+        this.elements.nextBtn.addEventListener('click', () => this.navigateToNext());
+        this.elements.skipBtn.addEventListener('click', () => this.skipQuestion());
+        this.elements.restartBtn.addEventListener('click', () => this.restartTest());
         
-        this.currentView = viewName;
+        // 暂停/继续
+        this.elements.pauseBtn.addEventListener('click', () => this.togglePause());
+        this.elements.resumeBtn.addEventListener('click', () => this.resumeTest());
+        this.elements.restartFromModalBtn.addEventListener('click', () => this.restartTest());
         
-        // 滚动到顶部
-        window.scrollTo(0, 0);
-    },
-    
-    // 更新进度显示
-    updateProgress() {
-        const progress = (AppState.currentQuestionIndex + 1) / QUESTIONS.length * 100;
-        DOM.progressFill.style.width = `${progress}%`;
-        DOM.currentQuestion.textContent = AppState.currentQuestionIndex + 1;
-        DOM.totalQuestions.textContent = QUESTIONS.length;
-        DOM.currentPosition.textContent = AppState.currentQuestionIndex + 1;
+        // 结果页面按钮
+        this.elements.retakeTestBtn.addEventListener('click', () => this.retakeTest());
+        this.elements.shareResultBtn.addEventListener('click', () => this.showShareModal());
+        this.elements.copyLinkBtn.addEventListener('click', () => this.copyResultLink());
         
-        // 更新当前维度显示
-        const currentQuestion = AppState.getCurrentQuestion();
-        if (currentQuestion) {
-            const dimension = DIMENSIONS[currentQuestion.dimension];
-            DOM.currentDimension.textContent = dimension.name;
-            
-            // 更新维度指示器
-            const dimensionIndex = DIMENSION_ORDER.indexOf(currentQuestion.dimension);
-            const dots = DOM.dimensionIndicator.querySelectorAll('.dimension-dot');
-            dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === dimensionIndex);
+        // 关闭模态框
+        this.elements.closeModals.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const modal = e.target.closest('.modal');
+                if (modal) {
+                    modal.classList.remove('active');
+                }
             });
-        }
+        });
         
-        // 更新按钮状态
-        DOM.prevButton.disabled = AppState.currentQuestionIndex === 0;
+        // 点击模态框背景关闭
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
         
-        const isLastQuestion = AppState.currentQuestionIndex === QUESTIONS.length - 1;
-        if (isLastQuestion) {
-            DOM.nextButton.innerHTML = `<span>查看结果</span><i class="fas fa-chart-bar"></i>`;
-        } else {
-            DOM.nextButton.innerHTML = `<span>下一题</span><i class="fas fa-arrow-right"></i>`;
-        }
+        // 键盘导航
+        document.addEventListener('keydown', (e) => this.handleKeyNavigation(e));
     }
-};
-
-// 问题渲染器
-const QuestionRenderer = {
-    // 渲染当前问题
-    renderCurrentQuestion() {
-        const question = AppState.getCurrentQuestion();
-        if (!question) return;
+    
+    // 渲染封面页
+    renderCoverPage() {
+        this.elements.coverPage.classList.add('active');
+        this.elements.testPage.classList.remove('active');
+        this.elements.resultPage.classList.remove('active');
+    }
+    
+    // 开始测试
+    startTest() {
+        this.elements.coverPage.classList.remove('active');
+        this.elements.testPage.classList.add('active');
+        this.elements.resultPage.classList.remove('active');
         
-        const dimension = DIMENSIONS[question.dimension];
+        this.currentQuestionIndex = 0;
+        this.renderQuestion();
+        this.updateProgress();
+    }
+    
+    // 渲染题目
+    renderQuestion() {
+        if (this.currentQuestionIndex >= Questions.length) {
+            this.completeTest();
+            return;
+        }
         
-        // 更新问题信息
-        DOM.questionNumber.textContent = `Q${question.id}`;
-        DOM.questionTitle.textContent = question.text;
-        DOM.questionHint.textContent = question.hint;
-        DOM.dimensionName.textContent = dimension.name;
+        const question = Questions[this.currentQuestionIndex];
         
-        // 清空选项容器
-        DOM.optionsContainer.innerHTML = '';
+        // 更新题目信息
+        this.elements.currentQuestion.textContent = this.currentQuestionIndex + 1;
+        this.elements.questionText.textContent = question.text;
+        this.elements.questionCounter.textContent = `第 ${this.currentQuestionIndex + 1} 题 / 共 ${Questions.length} 题`;
+        
+        // 更新部分信息
+        const dimension = TestDimensions[question.dimension];
+        this.elements.sectionTitle.textContent = `第${this.getDimensionNumber(question.dimension)}部分：${dimension.name}`;
+        this.elements.sectionDescription.textContent = dimension.description;
         
         // 渲染选项
+        this.renderOptions(question);
+        
+        // 更新导航按钮状态
+        this.updateNavigationButtons();
+    }
+    
+    // 渲染选项
+    renderOptions(question) {
+        this.elements.optionsContainer.innerHTML = '';
+        
         question.options.forEach((option, index) => {
             const optionElement = document.createElement('button');
             optionElement.className = 'option';
-            
-            // 检查是否已选择
-            if (AppState.userAnswers[AppState.currentQuestionIndex] === index) {
+            if (this.userAnswers[this.currentQuestionIndex] === index) {
                 optionElement.classList.add('selected');
             }
             
             optionElement.innerHTML = `
-                <div class="option-text">${option.text}</div>
+                <span class="option-text">${option.text}</span>
             `;
             
-            optionElement.addEventListener('click', () => {
-                this.selectOption(index);
-            });
+            optionElement.addEventListener('click', () => this.selectOption(index));
             
-            DOM.optionsContainer.appendChild(optionElement);
+            this.elements.optionsContainer.appendChild(optionElement);
         });
-        
-        // 更新视图
-        ViewManager.updateProgress();
-    },
+    }
     
     // 选择选项
     selectOption(optionIndex) {
-        // 移除其他选项的选择状态
-        const options = DOM.optionsContainer.querySelectorAll('.option');
-        options.forEach(option => option.classList.remove('selected'));
+        this.userAnswers[this.currentQuestionIndex] = optionIndex;
+        this.calculator.recordAnswer(this.currentQuestionIndex, optionIndex);
         
-        // 添加当前选项的选择状态
-        options[optionIndex].classList.add('selected');
-        
-        // 记录答案
-        AppState.recordAnswer(AppState.currentQuestionIndex, optionIndex);
+        // 更新UI
+        const options = this.elements.optionsContainer.querySelectorAll('.option');
+        options.forEach((option, index) => {
+            option.classList.toggle('selected', index === optionIndex);
+        });
         
         // 启用下一题按钮
-        DOM.nextButton.disabled = false;
-    },
+        this.elements.nextBtn.disabled = false;
+        
+        // 自动进入下一题（可选）
+        // setTimeout(() => this.navigateToNext(), 500);
+    }
+    
+    // 跳过题目
+    skipQuestion() {
+        this.userAnswers[this.currentQuestionIndex] = null;
+        this.navigateToNext();
+    }
     
     // 导航到下一题
-    nextQuestion() {
-        // 检查是否已回答当前问题
-        if (AppState.userAnswers[AppState.currentQuestionIndex] === null) {
-            this.showAnswerRequiredWarning();
-            return;
-        }
-        
-        const isLastQuestion = AppState.currentQuestionIndex === QUESTIONS.length - 1;
-        
-        if (isLastQuestion) {
-            this.submitTest();
+    navigateToNext() {
+        if (this.currentQuestionIndex < Questions.length - 1) {
+            this.currentQuestionIndex++;
+            this.renderQuestion();
+            this.updateProgress();
         } else {
-            AppState.currentQuestionIndex++;
-            this.renderCurrentQuestion();
+            this.completeTest();
         }
-    },
+    }
     
     // 导航到上一题
-    prevQuestion() {
-        if (AppState.currentQuestionIndex > 0) {
-            AppState.currentQuestionIndex--;
-            this.renderCurrentQuestion();
+    navigateToPrevious() {
+        if (this.currentQuestionIndex > 0) {
+            this.currentQuestionIndex--;
+            this.renderQuestion();
+            this.updateProgress();
         }
-    },
+    }
     
-    // 显示必须回答的警告
-    showAnswerRequiredWarning() {
-        const options = DOM.optionsContainer.querySelectorAll('.option');
+    // 更新进度
+    updateProgress() {
+        const progress = ((this.currentQuestionIndex + 1) / Questions.length) * 100;
+        this.elements.progressFill.style.width = `${progress}%`;
         
-        // 添加动画效果
-        options.forEach(option => {
-            option.style.animation = 'none';
-            setTimeout(() => {
-                option.style.animation = 'pulse 0.5s ease-in-out';
-            }, 10);
+        // 更新导航按钮状态
+        this.updateNavigationButtons();
+    }
+    
+    // 更新导航按钮状态
+    updateNavigationButtons() {
+        this.elements.prevBtn.disabled = this.currentQuestionIndex === 0;
+        this.elements.nextBtn.disabled = this.userAnswers[this.currentQuestionIndex] === null;
+    }
+    
+    // 完成测试
+    completeTest() {
+        this.isTestCompleted = true;
+        
+        // 计算结果
+        const result = this.calculator.calculateResult();
+        
+        // 显示结果页面
+        this.elements.coverPage.classList.remove('active');
+        this.elements.testPage.classList.remove('active');
+        this.elements.resultPage.classList.add('active');
+        
+        // 渲染结果
+        this.renderResult(result);
+    }
+    
+    // 渲染结果
+    renderResult(result) {
+        // 更新结果类型
+        document.getElementById('result-type-title').textContent = result.primaryType.name;
+        document.getElementById('result-type-tag').textContent = this.getTypeTag(result.primaryType.name);
+        
+        // 更新结果描述
+        document.getElementById('result-description').textContent = 
+            this.getTypeDescription(result.primaryType.name);
+        
+        // 渲染维度分数
+        this.renderDimensionScores(result.dimensionScores);
+        
+        // 渲染详细分析
+        this.renderDetailedAnalysis(result);
+        
+        // 渲染建议
+        this.renderRecommendations(result.primaryType.name);
+        
+        // 保存结果到本地存储
+        this.saveResultToLocalStorage(result);
+    }
+    
+    // 渲染维度分数
+    renderDimensionScores(dimensionScores) {
+        const container = document.getElementById('dimension-scores');
+        container.innerHTML = '';
+        
+        TestDimensions.forEach(dimension => {
+            const score = dimensionScores[dimension.id];
+            if (!score) return;
+            
+            const scoreElement = document.createElement('div');
+            scoreElement.className = 'dimension-score';
+            scoreElement.innerHTML = `
+                <div class="dimension-name">
+                    <i class="${this.getDimensionIcon(dimension.id)}"></i>
+                    ${dimension.name}
+                </div>
+                <div class="dimension-score-bar">
+                    <div class="dimension-score-fill" style="width: ${score.percentage}%"></div>
+                </div>
+                <div class="dimension-percentage">${score.percentage}%</div>
+            `;
+            
+            container.appendChild(scoreElement);
         });
-        
-        // 显示提示
-        const originalHint = DOM.questionHint.textContent;
-        DOM.questionHint.textContent = '请选择一个选项才能继续';
-        DOM.questionHint.style.color = '#ff6b8b';
-        
-        setTimeout(() => {
-            DOM.questionHint.textContent = originalHint;
-            DOM.questionHint.style.color = '';
-        }, 1500);
-    },
+    }
     
-    // 提交测试
-    async submitTest() {
-        // 切换到加载结果视图
-        ViewManager.switchTo('loadingResult');
+    // 渲染详细分析
+    renderDetailedAnalysis(result) {
+        const container = document.getElementById('analysis-grid');
+        container.innerHTML = '';
         
-        // 模拟分析过程
-        const analyzingSteps = [
-            "正在收集您的所有答案...",
-            "分析性格特质维度...",
-            "评估沟通方式偏好...",
-            "计算情感需求匹配...",
-            "比对价值观一致性...",
-            "分析生活态度契合度...",
-            "评估关系期待模式...",
-            "生成综合分析报告..."
+        const insights = [
+            {
+                icon: 'fas fa-chart-bar',
+                title: '核心特质匹配',
+                text: this.getCoreTraitsAnalysis(result.primaryType.name)
+            },
+            {
+                icon: 'fas fa-handshake',
+                title: '关系模式偏好',
+                text: this.getRelationshipPattern(result.primaryType.name)
+            },
+            {
+                icon: 'fas fa-lightbulb',
+                title: '关键需求洞察',
+                text: this.getKeyInsights(result.primaryType.name)
+            },
+            {
+                icon: 'fas fa-balance-scale',
+                title: '决策风格倾向',
+                text: this.getDecisionStyle(result.primaryType.name)
+            }
         ];
         
-        for (let i = 0; i < analyzingSteps.length; i++) {
-            DOM.analyzingText.textContent = analyzingSteps[i];
-            DOM.analyzingBar.style.width = `${((i + 1) / analyzingSteps.length) * 100}%`;
-            
-            // 更新步骤指示器
-            const steps = document.querySelectorAll('.analyzing-steps .step');
-            steps.forEach((step, index) => {
-                if (index <= i % 4) {
-                    step.classList.add('active');
-                } else {
-                    step.classList.remove('active');
-                }
-            });
-            
-            // 等待一段时间
-            await this.sleep(600);
-        }
-        
-        // 等待额外的动画时间
-        await this.sleep(800);
-        
-        // 切换到结果视图
-        ViewManager.switchTo('result');
-        
-        // 显示结果
-        this.displayResults();
-    },
-    
-    // 显示结果
-    displayResults() {
-        // 计算分数
-        const compatibilityScore = AppState.calculateCompatibility();
-        const dimensionScores = AppState.dimensionScores;
-        
-        // 设置结果副标题
-        const today = new Date();
-        const dateStr = today.toLocaleDateString('zh-CN', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            weekday: 'long'
+        insights.forEach(insight => {
+            const insightElement = document.createElement('div');
+            insightElement.className = 'analysis-item';
+            insightElement.innerHTML = `
+                <h4><i class="${insight.icon}"></i> ${insight.title}</h4>
+                <p>${insight.text}</p>
+            `;
+            container.appendChild(insightElement);
         });
-        DOM.resultDate.textContent = dateStr;
-        
-        // 设置匹配度
-        DOM.matchScore.textContent = compatibilityScore;
-        
-        // 设置进度条动画
-        const progressCircle = document.querySelector('.progress-bar');
-        const circumference = 2 * Math.PI * 54; // 对于大圆: 2 * Math.PI * 72
-        const offset = circumference - (compatibilityScore / 100) * circumference;
-        progressCircle.style.strokeDashoffset = offset;
-        
-        // 设置分数描述
-        let scoreDescription = '';
-        if (compatibilityScore >= 85) {
-            scoreDescription = '恭喜！您的理想伴侣画像非常清晰，匹配度极高。您对自己的需求有深刻理解，这有助于找到高度契合的伴侣。';
-        } else if (compatibilityScore >= 70) {
-            scoreDescription = '很好！您的理想伴侣画像比较明确，匹配度良好。您对自己的需求有一定了解，但可能在某些方面还有探索空间。';
-        } else if (compatibilityScore >= 60) {
-            scoreDescription = '不错！您对理想伴侣有一定想法，但可能还需要更深入地了解自己的需求。建议多关注自己的真实感受。';
-        } else {
-            scoreDescription = '您的理想伴侣画像还有待明确。这可能意味着您还在探索自己的需求，或者对关系持开放态度。';
-        }
-        DOM.scoreDescription.textContent = scoreDescription;
-        
-        // 设置详细维度分数
-        const normalizedScores = {};
-        for (const dimension in dimensionScores) {
-            const avg = dimensionScores[dimension].average;
-            normalizedScores[dimension] = avg > 0 ? Math.round(((avg - 1) / 3) * 100) : 0;
-        }
-        
-        // 设置维度分数条
-        DOM.compatibilityScore.style.width = `${normalizedScores.personality}%`;
-        DOM.valuesScore.style.width = `${normalizedScores.values}%`;
-        DOM.emotionalScore.style.width = `${normalizedScores.emotional}%`;
-        
-        // 设置详细分数显示
-        DOM.traitScore.textContent = `${normalizedScores.personality}%`;
-        DOM.communicationScore.textContent = `${normalizedScores.communication}%`;
-        DOM.emotionalNeedScore.textContent = `${normalizedScores.emotional}%`;
-        DOM.valuesScoreDetailed.textContent = `${normalizedScores.values}%`;
-        DOM.lifestyleScore.textContent = `${normalizedScores.lifestyle}%`;
-        DOM.relationshipScore.textContent = `${normalizedScores.relationship}%`;
-        
-        // 生成并显示分析结果
-        this.generateDetailedAnalysis(normalizedScores);
-        
-        // 更新雷达图
-        this.updateRadarChart(normalizedScores);
-    },
+    }
     
-    // 生成详细分析
-    generateDetailedAnalysis(scores) {
-        // 获取分析结果
-        const analysis = ResultGenerator.generateAnalysis(scores);
-        
-        // 设置详细分析文本
-        DOM.personalityTraits.textContent = analysis.personalityTraits;
-        DOM.communicationStyle.textContent = analysis.communicationStyle;
-        DOM.emotionalNeeds.textContent = analysis.emotionalNeeds;
-        DOM.coreValues.textContent = analysis.coreValues;
-        DOM.lifestyleAttitude.textContent = analysis.lifestyleAttitude;
-        DOM.relationshipExpectations.textContent = analysis.relationshipExpectations;
-        
-        // 设置建议
-        DOM.recognitionTips.textContent = analysis.recognitionTips;
-        DOM.relationshipTips.textContent = analysis.relationshipTips;
-        DOM.selfPreparation.textContent = analysis.selfPreparation;
-        
-        // 设置标签
-        this.setTags(DOM.personalityTags, analysis.personalityTags);
-        this.setTags(DOM.communicationTags, analysis.communicationTags);
-        this.setTags(DOM.emotionalTags, analysis.emotionalTags);
-        this.setTags(DOM.valuesTags, analysis.valuesTags);
-        this.setTags(DOM.lifestyleTags, analysis.lifestyleTags);
-        this.setTags(DOM.relationshipTags, analysis.relationshipTags);
-    },
-    
-    // 设置标签
-    setTags(container, tags) {
+    // 渲染建议
+    renderRecommendations(type) {
+        const container = document.getElementById('recommendations-content');
         container.innerHTML = '';
-        tags.forEach(tag => {
-            const span = document.createElement('span');
-            span.textContent = tag;
-            container.appendChild(span);
-        });
-    },
-    
-    // 更新雷达图
-    updateRadarChart(scores) {
-        const ctx = document.getElementById('radarChart').getContext('2d');
         
-        // 确保Chart.js已加载
-        if (typeof Chart === 'undefined') {
-            console.warn('Chart.js未加载，跳过雷达图渲染');
+        const recommendations = this.getTypeRecommendations(type);
+        
+        recommendations.forEach((rec, index) => {
+            const recElement = document.createElement('div');
+            recElement.className = 'recommendation-item';
+            recElement.innerHTML = `
+                <div class="recommendation-icon">${index + 1}</div>
+                <div class="recommendation-text">${rec}</div>
+            `;
+            container.appendChild(recElement);
+        });
+    }
+    
+    // 暂停/继续测试
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        
+        if (this.isPaused) {
+            this.elements.pauseModal.classList.add('active');
+        } else {
+            this.elements.pauseModal.classList.remove('active');
+        }
+    }
+    
+    resumeTest() {
+        this.isPaused = false;
+        this.elements.pauseModal.classList.remove('active');
+    }
+    
+    // 重新开始测试
+    restartTest() {
+        if (confirm('确定要重新开始测试吗？您的当前进度将被清除。')) {
+            this.currentQuestionIndex = 0;
+            this.userAnswers.fill(null);
+            this.calculator = new IdealPartnerCalculator();
+            this.isTestCompleted = false;
+            this.isPaused = false;
+            
+            // 关闭模态框
+            this.elements.pauseModal.classList.remove('active');
+            this.elements.shareModal.classList.remove('active');
+            
+            this.startTest();
+        }
+    }
+    
+    // 重新测试（从结果页面）
+    retakeTest() {
+        this.restartTest();
+    }
+    
+    // 显示分享模态框
+    showShareModal() {
+        this.elements.shareModal.classList.add('active');
+    }
+    
+    // 复制结果链接
+    copyResultLink() {
+        const url = window.location.href.split('?')[0];
+        navigator.clipboard.writeText(url)
+            .then(() => {
+                alert('链接已复制到剪贴板！');
+            })
+            .catch(err => {
+                console.error('复制失败:', err);
+                alert('复制失败，请手动复制链接。');
+            });
+    }
+    
+    // 处理键盘导航
+    handleKeyNavigation(e) {
+        if (this.isPaused || !this.elements.testPage.classList.contains('active')) {
             return;
         }
         
-        // 销毁现有图表
-        if (window.radarChart instanceof Chart) {
-            window.radarChart.destroy();
-        }
-        
-        const data = {
-            labels: ['性格特质', '沟通方式', '情感需求', '价值观', '生活态度', '关系期待'],
-            datasets: [{
-                label: '您的偏好强度',
-                data: [
-                    scores.personality,
-                    scores.communication,
-                    scores.emotional,
-                    scores.values,
-                    scores.lifestyle,
-                    scores.relationship
-                ],
-                backgroundColor: 'rgba(255, 107, 139, 0.2)',
-                borderColor: '#ff6b8b',
-                pointBackgroundColor: '#ff6b8b',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: '#ff6b8b',
-                borderWidth: 2
-            }]
-        };
-        
-        const config = {
-            type: 'radar',
-            data: data,
-            options: {
-                scales: {
-                    r: {
-                        angleLines: {
-                            display: true,
-                            color: 'rgba(0, 0, 0, 0.1)'
-                        },
-                        min: 0,
-                        max: 100,
-                        ticks: {
-                            stepSize: 20,
-                            display: false
-                        },
-                        pointLabels: {
-                            display: false
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.1)'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.dataset.label}: ${context.raw}%`;
-                            }
-                        }
-                    }
-                },
-                elements: {
-                    line: {
-                        tension: 0.3
-                    }
-                },
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        };
-        
-        window.radarChart = new Chart(ctx, config);
-    },
-    
-    // 辅助函数：等待
-    sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-};
-
-// 事件处理器
-const EventHandlers = {
-    // 初始化所有事件监听
-    init() {
-        // 开始测试按钮
-        DOM.startButton.addEventListener('click', () => {
-            AppState.testStarted = true;
-            AppState.currentQuestionIndex = 0;
-            ViewManager.switchTo('question');
-            QuestionRenderer.renderCurrentQuestion();
-        });
-        
-        // 上一题按钮
-        DOM.prevButton.addEventListener('click', () => {
-            QuestionRenderer.prevQuestion();
-        });
-        
-        // 下一题按钮
-        DOM.nextButton.addEventListener('click', () => {
-            QuestionRenderer.nextQuestion();
-        });
-        
-        // 重新测试按钮
-        DOM.retryButton.addEventListener('click', () => {
-            if (confirm('确定要重新开始测试吗？当前进度将会丢失。')) {
-                AppState.resetTest();
-                ViewManager.switchTo('cover');
-            }
-        });
-        
-        // 分享按钮
-        DOM.shareButton.addEventListener('click', () => {
-            this.shareResults();
-        });
-        
-        // 下载按钮
-        DOM.downloadButton.addEventListener('click', () => {
-            this.downloadResults();
-        });
-        
-        // 键盘导航
-        document.addEventListener('keydown', (e) => {
-            if (ViewManager.currentView === 'question') {
-                switch(e.key) {
-                    case 'ArrowLeft':
-                        QuestionRenderer.prevQuestion();
-                        break;
-                    case 'ArrowRight':
-                    case 'Enter':
-                        e.preventDefault();
-                        QuestionRenderer.nextQuestion();
-                        break;
-                    case '1':
-                    case '2':
-                    case '3':
-                    case '4':
-                        const optionIndex = parseInt(e.key) - 1;
-                        if (optionIndex >= 0 && optionIndex < 4) {
-                            const currentQuestion = AppState.getCurrentQuestion();
-                            if (currentQuestion && optionIndex < currentQuestion.options.length) {
-                                QuestionRenderer.selectOption(optionIndex);
-                            }
-                        }
-                        break;
+        switch (e.key) {
+            case 'ArrowLeft':
+                if (!this.elements.prevBtn.disabled) {
+                    this.navigateToPrevious();
                 }
-            }
-        });
-        
-        // 初始化加载完成
-        this.initLoading();
-    },
+                break;
+            case 'ArrowRight':
+            case ' ':
+                if (!this.elements.nextBtn.disabled) {
+                    this.navigateToNext();
+                }
+                break;
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+                const index = parseInt(e.key) - 1;
+                if (index >= 0 && index < 4) {
+                    this.selectOption(index);
+                }
+                break;
+        }
+    }
     
-    // 初始化加载
-    initLoading() {
-        // 模拟加载过程
-        setTimeout(() => {
-            DOM.loadingScreen.classList.add('fade-out');
+    // 保存结果到本地存储
+    saveResultToLocalStorage(result) {
+        try {
+            const testResult = {
+                timestamp: new Date().toISOString(),
+                result: result,
+                statistics: this.calculator.getAnswerStatistics()
+            };
             
-            setTimeout(() => {
-                DOM.loadingScreen.style.display = 'none';
-                AppState.isLoading = false;
-                
-                // 如果有进度，直接进入问题视图
-                if (AppState.testStarted && AppState.currentQuestionIndex > 0) {
-                    ViewManager.switchTo('question');
-                    QuestionRenderer.renderCurrentQuestion();
-                }
-            }, 500);
-        }, 1500);
-    },
-    
-    // 分享结果
-    shareResults() {
-        const score = AppState.calculateCompatibility();
-        const text = `我的理想伴侣画像测试结果：匹配度${score}%\n快来测试你的理想伴侣画像吧！`;
-        
-        if (navigator.share) {
-            navigator.share({
-                title: '理想伴侣画像测试结果',
-                text: text,
-                url: window.location.href
-            }).catch(err => {
-                console.log('分享失败:', err);
-                this.copyToClipboard(text);
+            localStorage.setItem('idealPartnerTestResult', JSON.stringify(testResult));
+            
+            // 保存历史记录
+            const history = JSON.parse(localStorage.getItem('idealPartnerTestHistory') || '[]');
+            history.unshift({
+                id: Date.now(),
+                type: result.primaryType.name,
+                date: new Date().toLocaleDateString(),
+                data: testResult
             });
-        } else {
-            this.copyToClipboard(text);
+            
+            // 只保留最近10条记录
+            if (history.length > 10) {
+                history.pop();
+            }
+            
+            localStorage.setItem('idealPartnerTestHistory', JSON.stringify(history));
+        } catch (error) {
+            console.error('保存结果失败:', error);
         }
-    },
-    
-    // 复制到剪贴板
-    copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            alert('结果已复制到剪贴板，快去分享给朋友吧！');
-        }).catch(err => {
-            console.log('复制失败:', err);
-            alert('分享失败，请手动复制结果。');
-        });
-    },
-    
-    // 下载结果
-    downloadResults() {
-        const score = AppState.calculateCompatibility();
-        const today = new Date().toLocaleDateString('zh-CN');
-        const content = `
-理想伴侣画像测试报告
-测试时间：${today}
-综合匹配度：${score}%
-
-性格特质：${DOM.personalityTraits.textContent.substring(0, 50)}...
-沟通方式：${DOM.communicationStyle.textContent.substring(0, 50)}...
-情感需求：${DOM.emotionalNeeds.textContent.substring(0, 50)}...
-价值观：${DOM.coreValues.textContent.substring(0, 50)}...
-生活态度：${DOM.lifestyleAttitude.textContent.substring(0, 50)}...
-关系期待：${DOM.relationshipExpectations.textContent.substring(0, 50)}...
-
---- 此报告由理想伴侣画像测试生成 ---
-测试链接：${window.location.href}
-        `.trim();
-        
-        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `理想伴侣画像测试报告_${today}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
-};
-
-// 应用初始化
-class IdealPartnerApp {
-    constructor() {
-        this.init();
     }
     
-    init() {
-        // 初始化应用状态
-        AppState.init();
-        
-        // 初始化事件处理器
-        EventHandlers.init();
-        
-        // 设置总问题数
-        DOM.totalQuestions.textContent = QUESTIONS.length;
-        
-        // 检查是否已完成所有问题
-        if (AppState.areAllQuestionsAnswered()) {
-            ViewManager.switchTo('result');
-            QuestionRenderer.displayResults();
-        }
-        
-        // 添加CSS动画
-        this.addAnimationStyles();
-        
-        // 记录应用启动
-        console.log('理想伴侣画像测试 v2.0 已启动');
+    // 辅助方法
+    getDimensionNumber(dimensionId) {
+        const chineseNumbers = ['一', '二', '三', '四', '五', '六'];
+        return chineseNumbers[dimensionId] || (dimensionId + 1);
     }
     
-    addAnimationStyles() {
-        // 添加SVG渐变
-        const svgNS = "http://www.w3.org/2000/svg";
-        const defs = document.createElementNS(svgNS, "defs");
-        const gradient = document.createElementNS(svgNS, "linearGradient");
-        gradient.setAttribute("id", "progressGradient");
-        gradient.setAttribute("x1", "0%");
-        gradient.setAttribute("y1", "0%");
-        gradient.setAttribute("x2", "100%");
-        gradient.setAttribute("y2", "0%");
+    getDimensionIcon(dimensionId) {
+        const icons = [
+            'fas fa-eye',
+            'fas fa-birthday-cake',
+            'fas fa-brain',
+            'fas fa-hiking',
+            'fas fa-briefcase',
+            'fas fa-star'
+        ];
+        return icons[dimensionId] || 'fas fa-question';
+    }
+    
+    getTypeTag(typeName) {
+        const tags = {
+            [TestResultTypes.SOUL_MATE]: '深度理解型伴侣',
+            [TestResultTypes.STEADY_BUILDER]: '稳定共建型伴侣',
+            [TestResultTypes.VIBRANT_ADVENTURER]: '活力冒险型伴侣',
+            [TestResultTypes.GENTLE_GUARDIAN]: '温柔守护型伴侣',
+            [TestResultTypes.ELITE_COMPANION]: '精英同行型伴侣',
+            [TestResultTypes.FREE_SPIRIT]: '随性自由型伴侣',
+            [TestResultTypes.TRADITIONAL_STABILIZER]: '传统安定型伴侣',
+            [TestResultTypes.ROMANTIC_DREAMER]: '浪漫梦想型伴侣'
+        };
         
-        const stop1 = document.createElementNS(svgNS, "stop");
-        stop1.setAttribute("offset", "0%");
-        stop1.setAttribute("stop-color", "#ff6b8b");
-        gradient.appendChild(stop1);
+        return tags[typeName] || '理想伴侣';
+    }
+    
+    getTypeDescription(typeName) {
+        const descriptions = {
+            [TestResultTypes.SOUL_MATE]: '您最看重精神层面的深度连接，寻求能够理解您内心世界、价值观高度契合的伴侣。您相信真正的默契来自于灵魂的共鸣，而不仅仅是表面的吸引。',
+            [TestResultTypes.STEADY_BUILDER]: '您向往经得起时间考验的、稳定而温暖的共生关系。您像一个深思熟虑的建筑师，寻求的是一位能够并肩携手、共同打造生活坚实基础的"人生合伙人"。',
+            [TestResultTypes.VIBRANT_ADVENTURER]: '您渴望和另一个有趣灵魂一起，体验生命这场盛大冒险。您理想的伴侣，首先得是您的"最佳玩伴"和"冒险搭档"。',
+            [TestResultTypes.GENTLE_GUARDIAN]: '您珍视那份细腻的体贴、无言的守护与情感上的深刻依恋。您向往的关系是亲密、包容、充满情感支持的。',
+            [TestResultTypes.ELITE_COMPANION]: '您期待强强联合的伙伴关系，在与彼此的共勉中攀登各自的高峰。您心中的理想伴侣，是能够与您并肩站在高处眺望风景的"人生战友"。',
+            [TestResultTypes.FREE_SPIRIT]: '您崇尚关系中的轻松自在、真实不羁与对彼此独特性的最大尊重。您抗拒被传统的框架或过高的期望所束缚。',
+            [TestResultTypes.TRADITIONAL_STABILIZER]: '您信赖那些历经时间检验的、清晰而稳定的关系结构与承诺。明确的社会角色、清晰的关系阶段和得到广泛认可的生活方式，能带来最大的安全感和归属感。',
+            [TestResultTypes.ROMANTIC_DREAMER]: '您坚信爱本身的光芒、心动的魔法与关系中永不褪色的仪式感。您是一个不折不扣的情感主义者，追求爱情的理想化表达。'
+        };
         
-        const stop2 = document.createElementNS(svgNS, "stop");
-        stop2.setAttribute("offset", "100%");
-        stop2.setAttribute("stop-color", "#4d6eff");
-        gradient.appendChild(stop2);
+        return descriptions[typeName] || '基于您的选择，我们为您生成了专属的理想伴侣画像。';
+    }
+    
+    getCoreTraitsAnalysis(typeName) {
+        const analyses = {
+            [TestResultTypes.SOUL_MATE]: '深度理解、精神共鸣、独立思考、真诚透明',
+            [TestResultTypes.STEADY_BUILDER]: '责任感强、务实可靠、忠诚稳定、善于规划',
+            [TestResultTypes.VIBRANT_ADVENTURER]: '充满活力、好奇心强、幽默有趣、热爱探索',
+            [TestResultTypes.GENTLE_GUARDIAN]: '温柔体贴、情感细腻、善解人意、包容支持',
+            [TestResultTypes.ELITE_COMPANION]: '专业卓越、目标明确、理性睿智、追求成长',
+            [TestResultTypes.FREE_SPIRIT]: '自由独立、真实随性、开放包容、尊重空间',
+            [TestResultTypes.TRADITIONAL_STABILIZER]: '传统稳重、家庭观念强、遵守承诺、重视秩序',
+            [TestResultTypes.ROMANTIC_DREAMER]: '情感丰富、浪漫细腻、注重仪式、追求完美'
+        };
         
-        defs.appendChild(gradient);
+        return analyses[typeName] || '根据您的选择分析出的核心特质组合。';
+    }
+    
+    getRelationshipPattern(typeName) {
+        const patterns = {
+            [TestResultTypes.SOUL_MATE]: '独立又相依的灵魂伴侣模式，注重精神层面的深度交流',
+            [TestResultTypes.STEADY_BUILDER]: '稳定共建的团队合作模式，共同规划未来承担责任',
+            [TestResultTypes.VIBRANT_ADVENTURER]: '共同探索的冒险伙伴模式，保持生活的新鲜与活力',
+            [TestResultTypes.GENTLE_GUARDIAN]: '相互依存的温暖守护模式，提供情感支持与安全感',
+            [TestResultTypes.ELITE_COMPANION]: '强强联合的成长伙伴模式，互相激励共同进步',
+            [TestResultTypes.FREE_SPIRIT]: '自由舒适的朋友式伴侣模式，保持各自空间与独立性',
+            [TestResultTypes.TRADITIONAL_STABILIZER]: '传统稳定的家庭中心模式，遵循明确角色与责任',
+            [TestResultTypes.ROMANTIC_DREAMER]: '浪漫梦幻的激情伴侣模式，注重情感表达与仪式感'
+        };
         
-        const svg = document.querySelector('.score-progress');
-        if (svg) {
-            svg.appendChild(defs);
-        }
+        return patterns[typeName] || '基于您偏好的关系互动方式。';
+    }
+    
+    getKeyInsights(typeName) {
+        const insights = {
+            [TestResultTypes.SOUL_MATE]: '您最需要的是能被深度理解的感觉，而非表面的陪伴',
+            [TestResultTypes.STEADY_BUILDER]: '稳定的承诺和可靠的行动比华丽的言语更能打动您',
+            [TestResultTypes.VIBRANT_ADVENTURER]: '新鲜感和共同体验是维持您关系热情的关键',
+            [TestResultTypes.GENTLE_GUARDIAN]: '细腻的关怀和情感的稳定性对您至关重要',
+            [TestResultTypes.ELITE_COMPANION]: '相互尊重的能力认可和共同成长让您感到满足',
+            [TestResultTypes.FREE_SPIRIT]: '足够的个人空间和真实的相处让您感到舒适',
+            [TestResultTypes.TRADITIONAL_STABILIZER]: '明确的承诺和传统价值的实现给您安全感',
+            [TestResultTypes.ROMANTIC_DREAMER]: '持续的浪漫表达和用心的仪式感让您感到被爱'
+        };
+        
+        return insights[typeName] || '基于您的选择分析出的关键情感需求。';
+    }
+    
+    getDecisionStyle(typeName) {
+        const styles = {
+            [TestResultTypes.SOUL_MATE]: '倾向于深度讨论后的共同决定，重视思想的碰撞',
+            [TestResultTypes.STEADY_BUILDER]: '偏好稳妥务实的决策，经过充分考量和规划',
+            [TestResultTypes.VIBRANT_ADVENTURER]: '灵活随性的决策风格，乐于尝试新的可能性',
+            [TestResultTypes.GENTLE_GUARDIAN]: '温和包容的决策方式，会考虑对方感受和关系和谐',
+            [TestResultTypes.ELITE_COMPANION]: '理性分析的决策模式，基于数据和逻辑判断',
+            [TestResultTypes.FREE_SPIRIT]: '自主独立的决策倾向，不喜欢被约束或过度干涉',
+            [TestResultTypes.TRADITIONAL_STABILIZER]: '遵循传统和经验的决策，重视稳定和可预测性',
+            [TestResultTypes.ROMANTIC_DREAMER]: '情感驱动的决策方式，更相信直觉和内心的感觉'
+        };
+        
+        return styles[typeName] || '反映您在关系中的重要决策倾向。';
+    }
+    
+    getTypeRecommendations(typeName) {
+        const recommendations = {
+            [TestResultTypes.SOUL_MATE]: [
+                '给那些"慢热"但真诚的人一点时间，让理想的共鸣照进生活的烟火',
+                '在仰望星空时，也能携手漫步人间，平衡精神追求与现实生活',
+                '保持开放心态，不同形式的深度连接都可能带来惊喜'
+            ],
+            [TestResultTypes.STEADY_BUILDER]: [
+                '在专注"建设"的同时，别忘了偶尔为关系"留白"，享受即兴的快乐',
+                '坚固的城池里，也需要有滋养心灵的花园，注重情感的表达与分享',
+                '稳定的承诺很重要，但也要给关系中的小惊喜留出空间'
+            ],
+            [TestResultTypes.VIBRANT_ADVENTURER]: [
+                '在享受无尽探索的同时，练习与同一个人在熟悉风景里发掘新的深度',
+                '最极致的冒险，有时是敢于承诺的勇气，平衡新鲜感与稳定性',
+                '保持活力的同时，建立一些有意义的日常仪式来加深连接'
+            ],
+            [TestResultTypes.GENTLE_GUARDIAN]: [
+                '在悉心呵护对方的同时，请同样温柔地守护好自己的需求和边界',
+                '一段健康的关系，是两颗心都能舒适地依偎，也能完整地独立',
+                '适度的自我关怀能让您以更充沛的能量去关爱他人'
+            ],
+            [TestResultTypes.ELITE_COMPANION]: [
+                '在追求共同成长和卓越的旅途中，偶尔切换回纯粹的"恋人"频道',
+                '那些不为了解决问题、不为了提升自我的无目的亲密时光同样重要',
+                '在理性讨论之余，也不要忽视情感的表达和感受的分享'
+            ],
+            [TestResultTypes.FREE_SPIRIT]: [
+                '真正的亲密，有时恰恰存在于敢于给予彼此距离的自信之中',
+                '在享受自由的同时，那些微妙的情感需求和共同的责任需要温柔的确认',
+                '保持独立性的同时，建立一些让彼此感到安心的连接点'
+            ],
+            [TestResultTypes.TRADITIONAL_STABILIZER]: [
+                '在遵循美好传统的同时，为你们二人独特的故事留出书写的空间',
+                '最温暖的"传统"，或许正是由你们共同创造的、专属于你们的新模式',
+                '稳定的结构中也可以融入一些个性化的表达和创新的元素'
+            ],
+            [TestResultTypes.ROMANTIC_DREAMER]: [
+                '在追寻心跳和仪式的同时，偶尔品味平凡一日里静水流深的安宁',
+                '最极致的浪漫，有时就藏在"我一直都在"的平淡守护里',
+                '平衡理想化的期待与现实中的不完美，让爱情在现实中扎根生长'
+            ]
+        };
+        
+        return recommendations[typeName] || [
+            '基于相互尊重和理解建立关系',
+            '保持开放的沟通，及时表达需求和感受',
+            '在关系中保持一定的个人空间和独立性'
+        ];
     }
 }
 
-// 当DOM加载完成后启动应用
+// 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
-    new IdealPartnerApp();
-});
-
-// 暴露必要的方法到全局作用域
-window.IdealPartnerApp = {
-    resetTest: () => {
-        AppState.resetTest();
-        ViewManager.switchTo('cover');
-    },
-    getResults: () => {
-        return {
-            score: AppState.calculateCompatibility(),
-            dimensions: AppState.dimensionScores
-        };
+    const viewModel = new TestViewModel();
+    
+    // 检查是否有保存的结果
+    try {
+        const savedResult = localStorage.getItem('idealPartnerTestResult');
+        if (savedResult) {
+            // 可以在结果页面显示"查看上次结果"的选项
+            console.log('找到上次的测试结果');
+        }
+    } catch (error) {
+        console.error('读取保存结果失败:', error);
     }
-};
+    
+    // 导出到全局（便于调试）
+    window.testViewModel = viewModel;
+    window.IdealPartnerCalculator = IdealPartnerCalculator;
+});

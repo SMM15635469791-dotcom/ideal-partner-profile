@@ -1,492 +1,2384 @@
-// 理想伴侣画像测试 - 问题数据文件
-// 版本: 2.0 | 最后更新: 2026-03-06
-// 注意: 此文件包含35个问题，分为6个评估维度
+// questions.js - 理想伴侣画像测试题目与数据
+'use strict';
 
-// 问题数据结构
-const QUESTIONS = [
+// 定义8种测试结果类型
+const TestResultTypes = {
+    SOUL_MATE: '灵魂共鸣者',
+    STEADY_BUILDER: '踏实共建者',
+    VIBRANT_ADVENTURER: '活力冒险家',
+    GENTLE_GUARDIAN: '温柔守护者',
+    ELITE_COMPANION: '精英同行者',
+    FREE_SPIRIT: '随性自由人',
+    TRADITIONAL_STABILIZER: '传统安定者',
+    ROMANTIC_DREAMER: '浪漫梦想家'
+};
+
+// 定义6个测试维度
+const TestDimensions = [
+    { id: 0, name: '颜值与外在', weight: 1.0, description: '对外在形象、气质、风格的基本期待' },
+    { id: 1, name: '年龄与阶段', weight: 1.0, description: '对年龄、人生阶段、情感经历的接受度' },
+    { id: 2, name: '性格特质', weight: 1.5, description: '对性格特点、情绪表达、社交方式的核心需求' },
+    { id: 3, name: '爱好与生活', weight: 1.2, description: '对生活方式、兴趣爱好、生活态度的期待' },
+    { id: 4, name: '职业与能力', weight: 1.2, description: '对职业发展、经济能力、事业心的要求' },
+    { id: 5, name: '三观与核心', weight: 1.5, description: '对价值观、生活目标、关系本质的核心信念' }
+];
+
+// 定义关键修饰题目
+const KeyModifierQuestions = {
+    APPEARANCE: 0,      // 颜值（第1题）
+    CEREMONY: 30,       // 仪式感（第31题）
+    INCOME: 23,         // 收入（第24题）
+    CHILDREN: 31        // 生育观（第32题）
+};
+
+// 定义修饰标签
+const ModifierTags = {
+    APPEARANCE_EMPHASIS: '（外显吸引强化型）',
+    CEREMONY_EMPHASIS: '（仪式感需求强化型）',
+    ECONOMIC_SECURITY: '（经济安全导向型）',
+    FAMILY_ORIENTED: '（家庭导向强化型）',
+    FREE_SPIRIT_ENHANCED: '（自由精神强化型）',
+    CAREER_FOCUSED: '（事业成就导向型）'
+};
+
+// 定义35道测试题目
+const Questions = [
+    {
+        id: 0,
+        dimension: 0, // 颜值与外在
+        text: "你对伴侣颜值的总体要求是?",
+        options: [
+            {
+                text: "比较看重颜值，赏心悦目是重要的吸引力。",
+                scores: {
+                    [TestResultTypes.ROMANTIC_DREAMER]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2
+                }
+            },
+            {
+                text: "颜值适中就好，干净、顺眼是我比较在意的。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "颜值不是首要因素，我更关注内在和其他特质。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "没有硬性标准，更看重整体的感觉或'眼缘'。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
+        ]
+    },
     {
         id: 1,
-        text: "在休闲时间，您更希望伴侣如何安排两人时光？",
-        dimension: "relationship",
-        hint: "这反映了您对伴侣关系的期待模式",
+        dimension: 0,
+        text: "你更偏好哪种身材类型?",
         options: [
-            { text: "各自有独立空间，偶尔分享兴趣", score: 1, dimensionScores: { personality: 1, communication: 2, emotional: 1, values: 2, lifestyle: 3, relationship: 1 } },
-            { text: "一起尝试新事物，保持新鲜感", score: 2, dimensionScores: { personality: 3, communication: 3, emotional: 2, values: 3, lifestyle: 4, relationship: 4 } },
-            { text: "安静在家，享受平静温馨的相处", score: 3, dimensionScores: { personality: 4, communication: 2, emotional: 4, values: 3, lifestyle: 2, relationship: 3 } },
-            { text: "计划充实活动，共同成长进步", score: 4, dimensionScores: { personality: 2, communication: 4, emotional: 3, values: 4, lifestyle: 1, relationship: 2 } }
+            {
+                text: "高挑、修长的类型。",
+                scores: {
+                    [TestResultTypes.ROMANTIC_DREAMER]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 3
+                }
+            },
+            {
+                text: "有线条、健康运动的类型。",
+                scores: {
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2
+                }
+            },
+            {
+                text: "匀称、标准的体型。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "没有特定偏好，健康自然就好。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 2,
-        text: "当您遇到困难时，希望伴侣最先给予什么支持？",
-        dimension: "emotional",
-        hint: "这反映了您的情感需求类型",
+        dimension: 0,
+        text: "你对伴侣身高的要求是?",
         options: [
-            { text: "冷静分析，提供解决方案", score: 1, dimensionScores: { personality: 3, communication: 4, emotional: 1, values: 2, lifestyle: 3, relationship: 2 } },
-            { text: "无条件陪伴，给予情感安慰", score: 2, dimensionScores: { personality: 2, communication: 1, emotional: 4, values: 3, lifestyle: 4, relationship: 3 } },
-            { text: "鼓励独立面对，相信我能解决", score: 3, dimensionScores: { personality: 4, communication: 2, emotional: 2, values: 4, lifestyle: 2, relationship: 1 } },
-            { text: "一起分担，共同寻找出路", score: 4, dimensionScores: { personality: 1, communication: 3, emotional: 3, values: 1, lifestyle: 1, relationship: 4 } }
+            {
+                text: "有比较明确的标准线(例如男生不低于···/女生不低于···)。",
+                scores: {
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "比我高一些/矮一些就可以接受。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 2
+                }
+            },
+            {
+                text: "和我差不多身高，感觉最自在。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "完全不介意，身高不是考虑因素。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 3,
-        text: "您如何看待伴侣的社交圈和异性朋友？",
-        dimension: "values",
-        hint: "这反映了您的价值观和信任基础",
+        dimension: 0,
+        text: "你认为打扮风格的重要性如何?",
         options: [
-            { text: "完全信任，给予充分自由", score: 1, dimensionScores: { personality: 4, communication: 3, emotional: 1, values: 4, lifestyle: 3, relationship: 2 } },
-            { text: "适度介意，希望保持适当距离", score: 2, dimensionScores: { personality: 2, communication: 4, emotional: 2, values: 2, lifestyle: 4, relationship: 3 } },
-            { text: "需要知情权，不介意但想了解", score: 3, dimensionScores: { personality: 3, communication: 2, emotional: 3, values: 3, lifestyle: 2, relationship: 1 } },
-            { text: "较难接受，希望以两人世界为主", score: 4, dimensionScores: { personality: 1, communication: 1, emotional: 4, values: 1, lifestyle: 1, relationship: 4 } }
+            {
+                text: "很重要，良好的衣品和审美是加分项。",
+                scores: {
+                    [TestResultTypes.ROMANTIC_DREAMER]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "比较重要,起码要整洁、得体。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "一般,只要不太突兀,不影响相处。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "不重要,穿着舒适、随意就好。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 4,
-        text: "在重要决策上，您希望伴侣如何与您沟通？",
-        dimension: "communication",
-        hint: "这反映了您偏好的沟通方式",
+        dimension: 0,
+        text: "你对'第一眼感觉'的重视程度?",
         options: [
-            { text: "理性讨论，逻辑说服", score: 1, dimensionScores: { personality: 3, communication: 4, emotional: 1, values: 2, lifestyle: 3, relationship: 2 } },
-            { text: "情感交流，感受优先", score: 2, dimensionScores: { personality: 2, communication: 1, emotional: 4, values: 3, lifestyle: 4, relationship: 3 } },
-            { text: "各自思考，然后协商", score: 3, dimensionScores: { personality: 4, communication: 3, emotional: 2, values: 4, lifestyle: 2, relationship: 1 } },
-            { text: "听从主导，避免争论", score: 4, dimensionScores: { personality: 1, communication: 2, emotional: 3, values: 1, lifestyle: 1, relationship: 4 } }
+            {
+                text: "非常重要，是决定是否愿意深入了解的前提。",
+                scores: {
+                    [TestResultTypes.ROMANTIC_DREAMER]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "比较重要，但感觉可以后续培养。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "不太依赖一眼定生死，更相信相处后的了解。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "完全不看重，深厚的感情都来自于日久生情。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 5,
-        text: "您理想中的家庭经济管理模式是怎样的？",
-        dimension: "lifestyle",
-        hint: "这反映了您的生活态度和价值观",
+        dimension: 1, // 年龄与阶段
+        text: "你期望的伴侣年龄差是?",
         options: [
-            { text: "各自经济独立，共同分担", score: 1, dimensionScores: { personality: 4, communication: 3, emotional: 2, values: 4, lifestyle: 4, relationship: 2 } },
-            { text: "一人主管，另一人辅助", score: 2, dimensionScores: { personality: 2, communication: 4, emotional: 1, values: 2, lifestyle: 3, relationship: 3 } },
-            { text: "完全共享，不分彼此", score: 3, dimensionScores: { personality: 1, communication: 2, emotional: 4, values: 3, lifestyle: 1, relationship: 4 } },
-            { text: "按比例贡献，灵活调整", score: 4, dimensionScores: { personality: 3, communication: 1, emotional: 3, values: 1, lifestyle: 2, relationship: 1 } }
+            {
+                text: "比我大几岁(3-8岁)。",
+                scores: {
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2
+                }
+            },
+            {
+                text: "比我小几岁(1-5岁)。",
+                scores: {
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "同龄人最好(相差2岁以内)。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "年龄差可以较大，心理成熟度和观念匹配更重要。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 6,
-        text: "您希望伴侣如何表达爱意？",
-        dimension: "emotional",
-        hint: "这反映了您的情感需求表达方式",
+        dimension: 1,
+        text: "你对伴侣人生阶段的要求是?",
         options: [
-            { text: "实际行动，默默付出", score: 1, dimensionScores: { personality: 3, communication: 1, emotional: 4, values: 2, lifestyle: 3, relationship: 2 } },
-            { text: "语言表达，直接说爱", score: 2, dimensionScores: { personality: 1, communication: 4, emotional: 3, values: 3, lifestyle: 4, relationship: 3 } },
-            { text: "精心时刻，高质量陪伴", score: 3, dimensionScores: { personality: 2, communication: 3, emotional: 2, values: 4, lifestyle: 2, relationship: 1 } },
-            { text: "礼物惊喜，仪式感满满", score: 4, dimensionScores: { personality: 4, communication: 2, emotional: 1, values: 1, lifestyle: 1, relationship: 4 } }
+            {
+                text: "最好和我的阶段高度同步(如都在奋斗期或都处于稳定期)。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2
+                }
+            },
+            {
+                text: "可以略有差异，但人生大方向(如发展、定居)最好一致。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2
+                }
+            },
+            {
+                text: "阶段不重要，关键是心态和节奏能否匹配。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "差异可以接受，甚至能相互带动、互补就好。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 7,
-        text: "当您和伴侣意见不合时，您希望如何解决？",
-        dimension: "communication",
-        hint: "这反映了您的冲突处理方式",
+        dimension: 1,
+        text: "你如何看待伴侣的情感经历?",
         options: [
-            { text: "立即沟通，当场解决", score: 1, dimensionScores: { personality: 3, communication: 4, emotional: 2, values: 3, lifestyle: 4, relationship: 2 } },
-            { text: "冷静后再谈，避免冲动", score: 2, dimensionScores: { personality: 4, communication: 3, emotional: 1, values: 4, lifestyle: 3, relationship: 3 } },
-            { text: "各退一步，寻求妥协", score: 3, dimensionScores: { personality: 2, communication: 2, emotional: 4, values: 2, lifestyle: 2, relationship: 1 } },
-            { text: "听从一方，结束争论", score: 4, dimensionScores: { personality: 1, communication: 1, emotional: 3, values: 1, lifestyle: 1, relationship: 4 } }
+            {
+                text: "希望对方的情感经历相对简单一些。",
+                scores: {
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "可以接受有经历，但重要的是TA已从中成长，懂得如何经营关系。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2
+                }
+            },
+            {
+                text: "不介意经历丰富，更看重我们现在如何相处。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "不太关心对方的过去，更专注于我们的现在和未来。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 8,
-        text: "您如何看待事业与家庭的平衡？",
-        dimension: "lifestyle",
-        hint: "这反映了您的生活优先级",
+        dimension: 1,
+        text: "你对婚姻时间表的看法?",
         options: [
-            { text: "事业为重，经济基础决定家庭幸福", score: 1, dimensionScores: { personality: 4, communication: 2, emotional: 1, values: 3, lifestyle: 4, relationship: 1 } },
-            { text: "家庭第一，陪伴家人最重要", score: 2, dimensionScores: { personality: 1, communication: 4, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "两者平衡，寻找最佳结合点", score: 3, dimensionScores: { personality: 3, communication: 3, emotional: 2, values: 4, lifestyle: 3, relationship: 3 } },
-            { text: "顺其自然，不同阶段不同重点", score: 4, dimensionScores: { personality: 2, communication: 1, emotional: 3, values: 1, lifestyle: 2, relationship: 2 } }
+            {
+                text: "有相对清晰的个人规划(例如希望恋爱1-3年内结婚)。",
+                scores: {
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "顺其自然，但希望双方对婚姻的期待和方向一致。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2
+                }
+            },
+            {
+                text: "目前更享受恋爱状态，对婚姻还没有具体计划。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "可以接受长期的恋爱关系，婚姻不是急切的目标。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 9,
-        text: "您希望伴侣的性格更偏向哪种类型？",
-        dimension: "personality",
-        hint: "这反映了您对伴侣性格的偏好",
+        dimension: 2, // 性格特质
+        text: "你更倾向的性格主基调是?",
         options: [
-            { text: "外向开朗，社交能力强", score: 1, dimensionScores: { personality: 4, communication: 3, emotional: 2, values: 2, lifestyle: 4, relationship: 3 } },
-            { text: "内向沉稳，深度思考型", score: 2, dimensionScores: { personality: 1, communication: 2, emotional: 4, values: 3, lifestyle: 1, relationship: 1 } },
-            { text: "理性务实，逻辑清晰", score: 3, dimensionScores: { personality: 3, communication: 4, emotional: 1, values: 4, lifestyle: 3, relationship: 2 } },
-            { text: "感性温柔，善解人意", score: 4, dimensionScores: { personality: 2, communication: 1, emotional: 3, values: 1, lifestyle: 2, relationship: 4 } }
+            {
+                text: "外向开朗，善于社交。",
+                scores: {
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "内向沉静，心思细腻。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "理性稳重，情绪平和。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "感性浪漫，情感丰富。",
+                scores: {
+                    [TestResultTypes.ROMANTIC_DREAMER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 10,
-        text: "您认为理想的亲密关系中，独立与依赖的比例应该是？",
-        dimension: "relationship",
-        hint: "这反映了您对关系距离的期待",
+        dimension: 2,
+        text: "发生矛盾时，你希望对方如何?",
         options: [
-            { text: "高度独立，各自精彩", score: 1, dimensionScores: { personality: 4, communication: 2, emotional: 1, values: 4, lifestyle: 3, relationship: 1 } },
-            { text: "适度依赖，相互扶持", score: 2, dimensionScores: { personality: 2, communication: 3, emotional: 3, values: 3, lifestyle: 2, relationship: 3 } },
-            { text: "亲密无间，彼此融合", score: 3, dimensionScores: { personality: 1, communication: 4, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "动态平衡，不同情境不同模式", score: 4, dimensionScores: { personality: 3, communication: 1, emotional: 2, values: 1, lifestyle: 4, relationship: 2 } }
+            {
+                text: "能主动沟通,尽快把问题说开、解决。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "双方都先冷静一下，然后再理性讨论。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "能优先照顾彼此的情绪,以温和的方式避免冲突升级。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "给彼此一些独立的空间和时间,让情绪自然消化。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 11,
-        text: "您希望伴侣在朋友面前如何描述您？",
-        dimension: "values",
-        hint: "这反映了您的自我价值认同",
+        dimension: 2,
+        text: "日常情绪表达方式，你偏好?",
         options: [
-            { text: "聪明能干的事业伙伴", score: 1, dimensionScores: { personality: 3, communication: 2, emotional: 1, values: 4, lifestyle: 4, relationship: 2 } },
-            { text: "温柔体贴的生活伴侣", score: 2, dimensionScores: { personality: 2, communication: 3, emotional: 4, values: 3, lifestyle: 1, relationship: 4 } },
-            { text: "有趣好玩的灵魂伴侣", score: 3, dimensionScores: { personality: 4, communication: 4, emotional: 2, values: 2, lifestyle: 3, relationship: 3 } },
-            { text: "相互成就的最佳战友", score: 4, dimensionScores: { personality: 1, communication: 1, emotional: 3, values: 1, lifestyle: 2, relationship: 1 } }
+            {
+                text: "直接表达，喜怒哀乐都比较明显。",
+                scores: {
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "含蓄内敛，更倾向于自我消化。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "偏向积极正向,较少抱怨。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "真实自然，不需要刻意控制或扮演。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 12,
-        text: "当您情绪低落时，希望伴侣如何回应？",
-        dimension: "emotional",
-        hint: "这反映了您的情感支持需求",
+        dimension: 2,
+        text: "面对压力时，你希望伴侣?",
         options: [
-            { text: "给予空间，让我自己消化", score: 1, dimensionScores: { personality: 4, communication: 1, emotional: 1, values: 3, lifestyle: 4, relationship: 2 } },
-            { text: "耐心倾听，理解我的感受", score: 2, dimensionScores: { personality: 2, communication: 4, emotional: 4, values: 2, lifestyle: 3, relationship: 3 } },
-            { text: "积极开导，带我走出情绪", score: 3, dimensionScores: { personality: 1, communication: 3, emotional: 2, values: 4, lifestyle: 2, relationship: 1 } },
-            { text: "实际帮助，解决引发情绪的问题", score: 4, dimensionScores: { personality: 3, communication: 2, emotional: 3, values: 1, lifestyle: 1, relationship: 4 } }
+            {
+                text: "有较强的自我消化能力,不过多传递负能量给我。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "愿意和我分享，我们可以一起分担压力。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "具备良好的自我调节能力，能较快恢复状态。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "需要我的安慰和支持，我愿意做TA的后盾。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            }
         ]
     },
     {
         id: 13,
-        text: "您认为伴侣间应该有多少共同爱好？",
-        dimension: "lifestyle",
-        hint: "这反映了您对共同生活的期待",
+        dimension: 2,
+        text: "在社交场合，你希望伴侣?",
         options: [
-            { text: "各自爱好，互不干涉", score: 1, dimensionScores: { personality: 4, communication: 2, emotional: 1, values: 4, lifestyle: 4, relationship: 1 } },
-            { text: "部分重叠，保持各自空间", score: 2, dimensionScores: { personality: 2, communication: 3, emotional: 2, values: 3, lifestyle: 3, relationship: 2 } },
-            { text: "大部分相同，共同成长", score: 3, dimensionScores: { personality: 1, communication: 4, emotional: 4, values: 2, lifestyle: 2, relationship: 4 } },
-            { text: "积极培养，努力创造共同点", score: 4, dimensionScores: { personality: 3, communication: 1, emotional: 3, values: 1, lifestyle: 1, relationship: 3 } }
+            {
+                text: "活跃主动，能带动气氛，善于交际。",
+                scores: {
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "适度参与，保持礼貌得体即可。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "安静陪伴在我身边就好，不需要特别突出。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "能和我同步，我想社交时TA能融入，我想安静时TA也能享受二人世界。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 14,
-        text: "您希望伴侣如何处理与您家人的关系？",
-        dimension: "values",
-        hint: "这反映了您的家庭观念",
+        dimension: 2,
+        text: "决策风格上，你偏好?",
         options: [
-            { text: "保持适当距离，尊重彼此家庭", score: 1, dimensionScores: { personality: 4, communication: 3, emotional: 1, values: 4, lifestyle: 3, relationship: 2 } },
-            { text: "亲密相处，像一家人一样", score: 2, dimensionScores: { personality: 1, communication: 4, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "礼貌友好，但不过多介入", score: 3, dimensionScores: { personality: 3, communication: 2, emotional: 2, values: 3, lifestyle: 4, relationship: 1 } },
-            { text: "视情况而定，顺其自然", score: 4, dimensionScores: { personality: 2, communication: 1, emotional: 3, values: 1, lifestyle: 2, relationship: 3 } }
+            {
+                text: "果断有主见，能带领我。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "商量型，喜欢共同讨论决定。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "随和型，愿意多听取我的意见。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "有分析能力，能为我提供有价值的参考建议。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 15,
-        text: "在公开场合，您希望伴侣如何与您互动？",
-        dimension: "communication",
-        hint: "这反映了您的社交表达偏好",
+        dimension: 2,
+        text: "幽默感对你有多重要?",
         options: [
-            { text: "保持适度亲密，自然流露", score: 1, dimensionScores: { personality: 2, communication: 3, emotional: 2, values: 3, lifestyle: 4, relationship: 3 } },
-            { text: "正式得体，注意社交礼仪", score: 2, dimensionScores: { personality: 3, communication: 2, emotional: 1, values: 4, lifestyle: 3, relationship: 2 } },
-            { text: "甜蜜恩爱，不介意展示亲密", score: 3, dimensionScores: { personality: 1, communication: 4, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "像朋友一样，轻松自在", score: 4, dimensionScores: { personality: 4, communication: 1, emotional: 3, values: 1, lifestyle: 2, relationship: 1 } }
+            {
+                text: "非常重要，和能让我开心的人在一起很重要。",
+                scores: {
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "比较重要，幽默能让日常相处更有趣。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "有的话是加分项，没有也关系不大。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "不重要，甚至不喜欢过于频繁的玩笑。",
+                scores: {
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 16,
-        text: "您认为理想的关系中，谁应该在经济上承担更多责任？",
-        dimension: "lifestyle",
-        hint: "这反映了您的经济观念",
+        dimension: 2,
+        text: "你对伴侣'需要个人空间'的态度?",
         options: [
-            { text: "经济能力较强的一方", score: 1, dimensionScores: { personality: 3, communication: 2, emotional: 1, values: 4, lifestyle: 4, relationship: 2 } },
-            { text: "平均分配，男女平等", score: 2, dimensionScores: { personality: 4, communication: 4, emotional: 2, values: 3, lifestyle: 3, relationship: 3 } },
-            { text: "传统模式，男方为主", score: 3, dimensionScores: { personality: 1, communication: 1, emotional: 4, values: 2, lifestyle: 1, relationship: 1 } },
-            { text: "按需调整，灵活变通", score: 4, dimensionScores: { personality: 2, communication: 3, emotional: 3, values: 1, lifestyle: 2, relationship: 4 } }
+            {
+                text: "非常理解且支持,因为我也需要个人空间。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "可以接受，但希望不要因此变得疏离。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "不太喜欢,我希望我们的联系能更紧密一些。",
+                scores: {
+                    [TestResultTypes.ROMANTIC_DREAMER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "只要找到两个人都舒服的平衡点就好。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 17,
-        text: "您希望伴侣在决策时更注重什么？",
-        dimension: "personality",
-        hint: "这反映了您欣赏的决策风格",
+        dimension: 3, // 爱好与生活
+        text: "周末时光，你希望如何度过?",
         options: [
-            { text: "逻辑分析，数据支持", score: 1, dimensionScores: { personality: 4, communication: 3, emotional: 1, values: 4, lifestyle: 3, relationship: 2 } },
-            { text: "直觉感受，内心声音", score: 2, dimensionScores: { personality: 1, communication: 2, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "他人建议，社会共识", score: 3, dimensionScores: { personality: 2, communication: 4, emotional: 2, values: 3, lifestyle: 4, relationship: 1 } },
-            { text: "经验积累，过往实践", score: 4, dimensionScores: { personality: 3, communication: 1, emotional: 3, values: 1, lifestyle: 2, relationship: 3 } }
+            {
+                text: "一起出门，尝试各种新鲜好玩的活动。",
+                scores: {
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "主要在家里享受二人世界，放松休息。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1
+                }
+            },
+            {
+                text: "一部分时间一起，一部分时间各自做喜欢的事。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "经常和朋友、家人聚会，热闹度过。",
+                scores: {
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 5,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            }
         ]
     },
     {
         id: 18,
-        text: "您如何看待伴侣的过去情感经历？",
-        dimension: "values",
-        hint: "这反映了您的感情观和开放度",
+        dimension: 3,
+        text: "对旅行偏好的匹配，你认为?",
         options: [
-            { text: "完全不在意，关注现在", score: 1, dimensionScores: { personality: 4, communication: 3, emotional: 1, values: 4, lifestyle: 3, relationship: 2 } },
-            { text: "适度了解，但不纠结", score: 2, dimensionScores: { personality: 2, communication: 2, emotional: 2, values: 3, lifestyle: 4, relationship: 3 } },
-            { text: "需要坦诚分享，建立信任", score: 3, dimensionScores: { personality: 3, communication: 4, emotional: 3, values: 2, lifestyle: 2, relationship: 1 } },
-            { text: "比较介意，希望越少越好", score: 4, dimensionScores: { personality: 1, communication: 1, emotional: 4, values: 1, lifestyle: 1, relationship: 4 } }
+            {
+                text: "很重要，能玩到一起是幸福的关键。",
+                scores: {
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "比较重要，但彼此愿意妥协和配合也行。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "不太重要，可以各自规划喜欢的旅行。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "可以慢慢培养出共同的旅行方式。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 19,
-        text: "在压力大时，您希望伴侣如何表现？",
-        dimension: "emotional",
-        hint: "这反映了您的压力应对期待",
+        dimension: 3,
+        text: "你对'共同爱好'的看法?",
         options: [
-            { text: "独自安静，不过多打扰", score: 1, dimensionScores: { personality: 4, communication: 1, emotional: 1, values: 3, lifestyle: 4, relationship: 2 } },
-            { text: "温柔安慰，给予情感支持", score: 2, dimensionScores: { personality: 2, communication: 3, emotional: 4, values: 2, lifestyle: 3, relationship: 4 } },
-            { text: "理性分析，帮助解决问题", score: 3, dimensionScores: { personality: 3, communication: 4, emotional: 2, values: 4, lifestyle: 2, relationship: 1 } },
-            { text: "转移注意力，带我去放松", score: 4, dimensionScores: { personality: 1, communication: 2, emotional: 3, values: 1, lifestyle: 1, relationship: 3 } }
+            {
+                text: "很重要，最好有2-3项能一起投入的爱好。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "有1-2项共同爱好就挺好的。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "不需要强求一致，尊重并支持彼此的独立爱好更好。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "不要求现有共同爱好，但愿意和对方一起培养新兴趣。",
+                scores: {
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 20,
-        text: "您希望伴侣的生活习惯与您有多相似？",
-        dimension: "lifestyle",
-        hint: "这反映了您对生活协调性的要求",
+        dimension: 3,
+        text: "消费观念和娱乐支出，你希望?",
         options: [
-            { text: "可以完全不同，互相尊重", score: 1, dimensionScores: { personality: 4, communication: 2, emotional: 1, values: 4, lifestyle: 4, relationship: 2 } },
-            { text: "基本一致，减少摩擦", score: 2, dimensionScores: { personality: 1, communication: 4, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "求同存异，包容不同", score: 3, dimensionScores: { personality: 3, communication: 3, emotional: 2, values: 3, lifestyle: 3, relationship: 3 } },
-            { text: "愿意为对方调整习惯", score: 4, dimensionScores: { personality: 2, communication: 1, emotional: 3, values: 1, lifestyle: 2, relationship: 1 } }
+            {
+                text: "高度一致，这样可以减少很多摩擦。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "在大方向上一致，细节可以磨合。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "可以互补，能互相理解对方的消费观。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "保持经济相对独立，在这件事上互不干涉。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 21,
-        text: "您认为理想的伴侣应该有多少个人空间？",
-        dimension: "relationship",
-        hint: "这反映了您对个人界限的看法",
+        dimension: 3,
+        text: "对居家环境的要求?",
         options: [
-            { text: "大量个人空间，保持独立性", score: 1, dimensionScores: { personality: 4, communication: 1, emotional: 1, values: 4, lifestyle: 3, relationship: 1 } },
-            { text: "适度个人空间，平衡独立与亲密", score: 2, dimensionScores: { personality: 2, communication: 3, emotional: 3, values: 3, lifestyle: 2, relationship: 3 } },
-            { text: "较少个人空间，高度融合", score: 3, dimensionScores: { personality: 1, communication: 4, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "弹性空间，根据不同需求调整", score: 4, dimensionScores: { personality: 3, communication: 2, emotional: 2, values: 1, lifestyle: 4, relationship: 2 } }
+            {
+                text: "必须保持整洁、有序。",
+                scores: {
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "舒适、温馨、有生活气息就好。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1
+                }
+            },
+            {
+                text: "要有设计感和品味，体现格调。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "自由、随意，不要有太多拘束。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 22,
-        text: "您希望伴侣如何对待您的朋友？",
-        dimension: "values",
-        hint: "这反映了您的社交价值观",
+        dimension: 4, // 职业与能力
+        text: "你对伴侣职业类型的要求?",
         options: [
-            { text: "融入我的朋友圈，成为朋友", score: 1, dimensionScores: { personality: 1, communication: 4, emotional: 3, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "礼貌友好，但不必深交", score: 2, dimensionScores: { personality: 2, communication: 2, emotional: 2, values: 3, lifestyle: 4, relationship: 2 } },
-            { text: "保持距离，尊重我的社交圈", score: 3, dimensionScores: { personality: 4, communication: 1, emotional: 1, values: 4, lifestyle: 3, relationship: 1 } },
-            { text: "选择性相处，看个人合拍度", score: 4, dimensionScores: { personality: 3, communication: 3, emotional: 4, values: 1, lifestyle: 2, relationship: 3 } }
+            {
+                text: "倾向于稳定、体面的职业(如公务员、教师、医生等)。",
+                scores: {
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "从事有发展前景、朝阳行业的工作。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "做自己热爱的工作，有职业成就感和热情。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "没有限制，有正当职业、能自立就好。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 23,
-        text: "您欣赏哪种类型的幽默感？",
-        dimension: "personality",
-        hint: "这反映了您的性格偏好",
+        dimension: 4,
+        text: "收入水平的重要性?",
         options: [
-            { text: "机智犀利，反应迅速", score: 1, dimensionScores: { personality: 4, communication: 3, emotional: 1, values: 2, lifestyle: 4, relationship: 3 } },
-            { text: "温和风趣，不伤他人", score: 2, dimensionScores: { personality: 2, communication: 2, emotional: 4, values: 3, lifestyle: 2, relationship: 4 } },
-            { text: "冷幽默，需要思考才懂", score: 3, dimensionScores: { personality: 3, communication: 1, emotional: 2, values: 4, lifestyle: 3, relationship: 2 } },
-            { text: "夸张搞笑，活跃气氛", score: 4, dimensionScores: { personality: 1, communication: 4, emotional: 3, values: 1, lifestyle: 1, relationship: 1 } }
+            {
+                text: "很重要，需要达到我认可的基本标准。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "比较重要，至少不能比我低太多。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "过得去就行，够用且有一定结余即可。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1
+                }
+            },
+            {
+                text: "不重要，我更看重对方未来的发展潜力。",
+                scores: {
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 24,
-        text: "在纪念日或节日，您希望如何庆祝？",
-        dimension: "emotional",
-        hint: "这反映了您的仪式感需求",
+        dimension: 4,
+        text: "工作时间匹配度的重要性?",
         options: [
-            { text: "简单温馨，两人世界", score: 1, dimensionScores: { personality: 2, communication: 1, emotional: 4, values: 3, lifestyle: 2, relationship: 4 } },
-            { text: "盛大浪漫，精心准备", score: 2, dimensionScores: { personality: 1, communication: 4, emotional: 3, values: 2, lifestyle: 1, relationship: 3 } },
-            { text: "顺其自然，不刻意安排", score: 3, dimensionScores: { personality: 4, communication: 2, emotional: 1, values: 4, lifestyle: 4, relationship: 1 } },
-            { text: "有创意，每次都有新意", score: 4, dimensionScores: { personality: 3, communication: 3, emotional: 2, values: 1, lifestyle: 3, relationship: 2 } }
+            {
+                text: "很重要，希望作息同步，有更多共同时间。",
+                scores: {
+                    [TestResultTypes.ROMANTIC_DREAMER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "比较重要，但能保证有稳定的共同时间就行。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "不太重要，我们可以协调出见面的时间。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "完全不重要，彼此有独立的工作节奏更好。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 25,
-        text: "您希望伴侣如何处理负面情绪？",
-        dimension: "communication",
-        hint: "这反映了您对情绪表达的态度",
+        dimension: 4,
+        text: "你对'事业心'的期待?",
         options: [
-            { text: "直接表达，共同面对", score: 1, dimensionScores: { personality: 2, communication: 4, emotional: 3, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "自我调节，不传播负能量", score: 2, dimensionScores: { personality: 4, communication: 1, emotional: 1, values: 4, lifestyle: 4, relationship: 2 } },
-            { text: "选择性分享，适度倾诉", score: 3, dimensionScores: { personality: 3, communication: 3, emotional: 2, values: 3, lifestyle: 3, relationship: 3 } },
-            { text: "通过其他方式发泄，如运动", score: 4, dimensionScores: { personality: 1, communication: 2, emotional: 4, values: 1, lifestyle: 2, relationship: 1 } }
+            {
+                text: "有很强的事业心和上进心。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "有适度的事业心，能平衡工作和生活。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "事业心不用太强，更看重对家庭的投入。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1
+                }
+            },
+            {
+                text: "对事业没有要求，更看重生活的愉悦感。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 26,
-        text: "您认为理想的伴侣应该有多少生活技能？",
-        dimension: "lifestyle",
-        hint: "这反映了您的实际生活期待",
+        dimension: 4,
+        text: "你希望伴侣在专业领域?",
         options: [
-            { text: "生存必备，能照顾自己", score: 1, dimensionScores: { personality: 4, communication: 2, emotional: 1, values: 4, lifestyle: 4, relationship: 1 } },
-            { text: "多才多艺，生活丰富", score: 2, dimensionScores: { personality: 1, communication: 4, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "互补型，不会的可以学", score: 3, dimensionScores: { personality: 3, communication: 3, emotional: 2, values: 3, lifestyle: 3, relationship: 3 } },
-            { text: "专业精通，在某领域出色", score: 4, dimensionScores: { personality: 2, communication: 1, emotional: 3, values: 1, lifestyle: 2, relationship: 2 } }
+            {
+                text: "是佼佼者或专家,能让我由衷佩服。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "能和我有共同话题，可以深入交流。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "不需要多精通，有基本了解能听懂就行。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1
+                }
+            },
+            {
+                text: "无所谓，我们的生活可以很少聊工作。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 27,
-        text: "您希望伴侣如何支持您的事业发展？",
-        dimension: "relationship",
-        hint: "这反映了您的职业与关系平衡观",
+        dimension: 5, // 三观与核心
+        text: "金钱观上，你希望?",
         options: [
-            { text: "精神支持，鼓励打气", score: 1, dimensionScores: { personality: 2, communication: 3, emotional: 4, values: 2, lifestyle: 1, relationship: 3 } },
-            { text: "实际帮助，提供资源建议", score: 2, dimensionScores: { personality: 3, communication: 4, emotional: 1, values: 4, lifestyle: 4, relationship: 2 } },
-            { text: "不干涉，相信我的选择", score: 3, dimensionScores: { personality: 4, communication: 1, emotional: 2, values: 3, lifestyle: 3, relationship: 1 } },
-            { text: "共同进步，互相成就", score: 4, dimensionScores: { personality: 1, communication: 2, emotional: 3, values: 1, lifestyle: 2, relationship: 4 } }
+            {
+                text: "节俭、有规划，不铺张浪费。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "懂得享受生活，但会量力而行。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "有投资理财头脑，注重财富增值。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "没有严格标准，大体上合理、不出格就行。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 28,
-        text: "您如何看待家务分工？",
-        dimension: "values",
-        hint: "这反映了您的家庭责任观念",
+        dimension: 5,
+        text: "家庭观的核心是?",
         options: [
-            { text: "明确分工，各司其职", score: 1, dimensionScores: { personality: 4, communication: 3, emotional: 1, values: 4, lifestyle: 4, relationship: 2 } },
-            { text: "谁有空谁做，灵活处理", score: 2, dimensionScores: { personality: 2, communication: 2, emotional: 3, values: 3, lifestyle: 3, relationship: 3 } },
-            { text: "一起做，增进感情", score: 3, dimensionScores: { personality: 1, communication: 4, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "外包解决，专业高效", score: 4, dimensionScores: { personality: 3, communication: 1, emotional: 2, values: 1, lifestyle: 2, relationship: 1 } }
+            {
+                text: "以我们俩组建的新家庭为绝对核心。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "与各自的原生家庭保持比较紧密的联系和照顾。",
+                scores: {
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "小家庭完全独立,不过多牵扯双方原生家庭。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "能在新家庭和原生家庭之间找到平衡点。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 29,
-        text: "您希望伴侣的外在形象更注重什么？",
-        dimension: "personality",
-        hint: "这反映了您的审美偏好",
+        dimension: 5,
+        text: "对未来生活的想象，最重要的是?",
         options: [
-            { text: "干净整洁，舒适得体", score: 1, dimensionScores: { personality: 2, communication: 1, emotional: 2, values: 3, lifestyle: 4, relationship: 3 } },
-            { text: "时尚潮流，有品味", score: 2, dimensionScores: { personality: 1, communication: 4, emotional: 3, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "自然随意，不做作", score: 3, dimensionScores: { personality: 4, communication: 2, emotional: 1, values: 4, lifestyle: 3, relationship: 2 } },
-            { text: "专业得体，符合场合", score: 4, dimensionScores: { personality: 3, communication: 3, emotional: 4, values: 1, lifestyle: 2, relationship: 1 } }
+            {
+                text: "物质丰足，有安全感和保障。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "精神富足，能一起持续学习和成长。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "平平淡淡，温馨和睦就是幸福。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1
+                }
+            },
+            {
+                text: "丰富多彩，充满不同的体验和冒险。",
+                scores: {
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 30,
-        text: "在旅行时，您希望如何与伴侣相处？",
-        dimension: "lifestyle",
-        hint: "这反映了您的休闲方式偏好",
+        dimension: 5,
+        text: "对'仪式感'的看法?",
         options: [
-            { text: "精心计划，高效游玩", score: 1, dimensionScores: { personality: 3, communication: 4, emotional: 1, values: 4, lifestyle: 4, relationship: 2 } },
-            { text: "随性而为，走到哪算哪", score: 2, dimensionScores: { personality: 1, communication: 1, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "深度体验，感受当地文化", score: 3, dimensionScores: { personality: 4, communication: 3, emotional: 2, values: 3, lifestyle: 3, relationship: 1 } },
-            { text: "放松休息，享受酒店设施", score: 4, dimensionScores: { personality: 2, communication: 2, emotional: 3, values: 1, lifestyle: 2, relationship: 3 } }
+            {
+                text: "非常重要，是爱情中不可或缺的调味剂。",
+                scores: {
+                    [TestResultTypes.ROMANTIC_DREAMER]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "比较重要，重要的日子和时刻需要被铭记。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "可有可无，平淡日常中的关怀比刻意仪式更珍贵。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "不太在意，甚至觉得有些麻烦。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            }
         ]
     },
     {
         id: 31,
-        text: "您希望伴侣如何表达不同意见？",
-        dimension: "communication",
-        hint: "这反映了您的沟通冲突处理偏好",
+        dimension: 5,
+        text: "对生育和子女教育的态度?",
         options: [
-            { text: "直接坦率，不拐弯抹角", score: 1, dimensionScores: { personality: 4, communication: 4, emotional: 1, values: 3, lifestyle: 2, relationship: 2 } },
-            { text: "委婉温和，照顾感受", score: 2, dimensionScores: { personality: 1, communication: 2, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "书面表达，更清晰理性", score: 3, dimensionScores: { personality: 3, communication: 3, emotional: 2, values: 4, lifestyle: 4, relationship: 1 } },
-            { text: "幽默化解，避免冲突", score: 4, dimensionScores: { personality: 2, communication: 1, emotional: 3, values: 1, lifestyle: 3, relationship: 3 } }
+            {
+                text: "一定要有孩子，并且会认真规划教育。",
+                scores: {
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "顺其自然，有孩子挺好，没有也能接受。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.STEADY_BUILDER]: 3,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "倾向于丁克，不想要孩子。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "目前还没想清楚，看未来的发展和状态。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.FREE_SPIRIT]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 32,
-        text: "您认为理想的亲密关系应该持续多久？",
-        dimension: "relationship",
-        hint: "这反映了您对关系长度的期待",
+        dimension: 5,
+        text: "如何处理与异性朋友的界限?",
         options: [
-            { text: "一辈子，从一而终", score: 1, dimensionScores: { personality: 1, communication: 3, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "顺其自然，珍惜当下", score: 2, dimensionScores: { personality: 2, communication: 2, emotional: 2, values: 3, lifestyle: 4, relationship: 3 } },
-            { text: "长期稳定，但接受变化", score: 3, dimensionScores: { personality: 3, communication: 4, emotional: 3, values: 4, lifestyle: 2, relationship: 2 } },
-            { text: "质量比长度更重要", score: 4, dimensionScores: { personality: 4, communication: 1, emotional: 1, values: 1, lifestyle: 3, relationship: 1 } }
+            {
+                text: "必须有非常清晰的界限，主动避嫌。",
+                scores: {
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "可以有正常的社交，但需要透明、公开。",
+                scores: {
+                    [TestResultTypes.ELITE_COMPANION]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.SOUL_MATE]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "给予对方完全的信任，不干涉其社交自由。",
+                scores: {
+                    [TestResultTypes.FREE_SPIRIT]: 5,
+                    [TestResultTypes.SOUL_MATE]: 4,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "很难一概而论，需要根据具体的人和事来讨论。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            }
         ]
     },
     {
         id: 33,
-        text: "您希望伴侣的价值观与您有多匹配？",
-        dimension: "values",
-        hint: "这反映了您对价值观一致性的重视程度",
+        dimension: 5,
+        text: "在长期关系中，你认为最重要的维护因素是?",
         options: [
-            { text: "高度一致，核心价值必须相同", score: 1, dimensionScores: { personality: 1, communication: 2, emotional: 3, values: 4, lifestyle: 1, relationship: 4 } },
-            { text: "大体一致，细节可不同", score: 2, dimensionScores: { personality: 2, communication: 3, emotional: 2, values: 3, lifestyle: 3, relationship: 3 } },
-            { text: "可以不同，互相尊重", score: 3, dimensionScores: { personality: 4, communication: 4, emotional: 1, values: 2, lifestyle: 4, relationship: 2 } },
-            { text: "不同反而有吸引力", score: 4, dimensionScores: { personality: 3, communication: 1, emotional: 4, values: 1, lifestyle: 2, relationship: 1 } }
+            {
+                text: "深度的理解、包容和有效沟通。",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 5,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.ELITE_COMPANION]: 3,
+                    [TestResultTypes.STEADY_BUILDER]: 2,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "彼此的忠诚、责任和承诺。",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 5,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 4,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 3,
+                    [TestResultTypes.ELITE_COMPANION]: 2,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "持续的吸引力、激情和心动的感觉。",
+                scores: {
+                    [TestResultTypes.ROMANTIC_DREAMER]: 5,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 4,
+                    [TestResultTypes.FREE_SPIRIT]: 3,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "日常的陪伴、支持和不离不弃。",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 5,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 3,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            }
         ]
     },
     {
         id: 34,
-        text: "您希望伴侣如何展现责任感？",
-        dimension: "personality",
-        hint: "这反映了您对责任感的理解",
+        dimension: 5, // 终极权重题
+        text: "你心中'理想伴侣'最核心、最不可或缺的特质是?",
         options: [
-            { text: "对工作认真负责", score: 1, dimensionScores: { personality: 4, communication: 2, emotional: 1, values: 4, lifestyle: 3, relationship: 2 } },
-            { text: "对家庭全心投入", score: 2, dimensionScores: { personality: 2, communication: 3, emotional: 4, values: 2, lifestyle: 1, relationship: 4 } },
-            { text: "对社会有贡献意识", score: 3, dimensionScores: { personality: 3, communication: 4, emotional: 2, values: 3, lifestyle: 4, relationship: 1 } },
-            { text: "对自己的人生负责", score: 4, dimensionScores: { personality: 1, communication: 1, emotional: 3, values: 1, lifestyle: 2, relationship: 3 } }
-        ]
-    },
-    {
-        id: 35,
-        text: "在未来的规划中，您希望伴侣扮演什么角色？",
-        dimension: "relationship",
-        hint: "这反映了您对长期关系的期待",
-        options: [
-            { text: "并肩作战的伙伴", score: 1, dimensionScores: { personality: 4, communication: 3, emotional: 2, values: 4, lifestyle: 3, relationship: 4 } },
-            { text: "温暖依靠的港湾", score: 2, dimensionScores: { personality: 2, communication: 2, emotional: 4, values: 3, lifestyle: 2, relationship: 3 } },
-            { text: "共同成长的导师", score: 3, dimensionScores: { personality: 3, communication: 4, emotional: 3, values: 2, lifestyle: 4, relationship: 2 } },
-            { text: "简单陪伴的爱人", score: 4, dimensionScores: { personality: 1, communication: 1, emotional: 1, values: 1, lifestyle: 1, relationship: 1 } }
+            {
+                text: "理解与包容",
+                scores: {
+                    [TestResultTypes.SOUL_MATE]: 10,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 8,
+                    [TestResultTypes.ELITE_COMPANION]: 6,
+                    [TestResultTypes.STEADY_BUILDER]: 4,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 2,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 1
+                }
+            },
+            {
+                text: "忠诚与责任",
+                scores: {
+                    [TestResultTypes.STEADY_BUILDER]: 10,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 8,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 6,
+                    [TestResultTypes.ELITE_COMPANION]: 4,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 2,
+                    [TestResultTypes.SOUL_MATE]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            },
+            {
+                text: "激情与心动",
+                scores: {
+                    [TestResultTypes.ROMANTIC_DREAMER]: 10,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 8,
+                    [TestResultTypes.FREE_SPIRIT]: 6,
+                    [TestResultTypes.GENTLE_GUARDIAN]: 4,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.STEADY_BUILDER]: 1,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 1
+                }
+            },
+            {
+                text: "陪伴与支持",
+                scores: {
+                    [TestResultTypes.GENTLE_GUARDIAN]: 10,
+                    [TestResultTypes.STEADY_BUILDER]: 8,
+                    [TestResultTypes.TRADITIONAL_STABILIZER]: 6,
+                    [TestResultTypes.ROMANTIC_DREAMER]: 4,
+                    [TestResultTypes.SOUL_MATE]: 2,
+                    [TestResultTypes.ELITE_COMPANION]: 1,
+                    [TestResultTypes.VIBRANT_ADVENTURER]: 1,
+                    [TestResultTypes.FREE_SPIRIT]: 1
+                }
+            }
         ]
     }
 ];
 
-// 维度配置
-const DIMENSIONS = {
-    personality: {
-        id: "personality",
-        name: "性格特质",
-        description: "分析您对伴侣性格特征的偏好，包括内外向、理性感性、处事风格等",
-        color: "#FF6B8B",
-        icon: "fa-user-circle"
-    },
-    communication: {
-        id: "communication",
-        name: "沟通方式",
-        description: "评估您期望的沟通模式，包括表达方式、冲突处理和情感交流等",
-        color: "#4D6EFF",
-        icon: "fa-comments"
-    },
-    emotional: {
-        id: "emotional",
-        name: "情感需求",
-        description: "探索您的情感需求类型，包括安全感、表达方式和情感支持等",
-        color: "#6BDC8B",
-        icon: "fa-heart"
-    },
-    values: {
-        id: "values",
-        name: "价值观",
-        description: "分析您在生活、家庭、事业等方面的核心价值观匹配度",
-        color: "#FFD166",
-        icon: "fa-balance-scale"
-    },
-    lifestyle: {
-        id: "lifestyle",
-        name: "生活态度",
-        description: "评估您对生活方式、习惯和日常相处的偏好",
-        color: "#9D4EDD",
-        icon: "fa-home"
-    },
-    relationship: {
-        id: "relationship",
-        name: "关系期待",
-        description: "探索您对亲密关系的期待，包括独立性、依赖度和关系模式等",
-        color: "#06D6A0",
-        icon: "fa-handshake"
+// 算法计算函数
+class IdealPartnerCalculator {
+    constructor() {
+        this.userAnswers = new Array(Questions.length).fill(null);
+        this.typeScores = {};
+        this.initializeScores();
     }
-};
+    
+    // 初始化分数
+    initializeScores() {
+        for (const type in TestResultTypes) {
+            this.typeScores[TestResultTypes[type]] = 0;
+        }
+    }
+    
+    // 记录用户答案
+    recordAnswer(questionId, optionIndex) {
+        if (questionId >= 0 && questionId < Questions.length) {
+            this.userAnswers[questionId] = optionIndex;
+        }
+    }
+    
+    // 计算最终结果
+    calculateResult() {
+        // 重置分数
+        this.initializeScores();
+        
+        // 步骤1：原始分数累加
+        for (let i = 0; i < Questions.length; i++) {
+            const question = Questions[i];
+            const answerIndex = this.userAnswers[i];
+            
+            if (answerIndex !== null && answerIndex >= 0) {
+                const option = question.options[answerIndex];
+                const dimensionWeight = TestDimensions[question.dimension].weight;
+                
+                // 累加分数，应用维度权重
+                for (const type in option.scores) {
+                    this.typeScores[type] += option.scores[type] * dimensionWeight;
+                }
+            }
+        }
+        
+        // 步骤2：排序并获取主副类型
+        const sortedTypes = Object.entries(this.typeScores)
+            .sort((a, b) => b[1] - a[1])
+            .map(([type, score]) => ({ type, score }));
+        
+        if (sortedTypes.length < 2) {
+            return this.createResultObject(sortedTypes[0], null, sortedTypes);
+        }
+        
+        const primaryType = sortedTypes[0];
+        const secondaryType = sortedTypes[1];
+        
+        // 步骤3：计算比率，确定副类型倾向
+        const ratio = secondaryType.score / primaryType.score;
+        let secondaryTendency = null;
+        let tendencyStrength = 'none';
+        
+        if (ratio >= 0.85) {
+            secondaryTendency = secondaryType.type;
+            tendencyStrength = 'strong';
+        } else if (ratio >= 0.70) {
+            secondaryTendency = secondaryType.type;
+            tendencyStrength = 'moderate';
+        } else if (ratio >= 0.60) {
+            secondaryTendency = secondaryType.type;
+            tendencyStrength = 'weak';
+        }
+        
+        // 步骤4：应用修饰标签
+        const modifiedType = this.applyModifierTags(primaryType.type);
+        
+        // 步骤5：计算匹配度百分比
+        const totalScore = sortedTypes.reduce((sum, item) => sum + item.score, 0);
+        const typesWithPercentage = sortedTypes.map(item => ({
+            type: item.type,
+            score: item.score,
+            percentage: Math.round((item.score / totalScore) * 100)
+        }));
+        
+        return this.createResultObject(
+            { ...primaryType, type: modifiedType },
+            secondaryTendency ? { 
+                type: secondaryTendency, 
+                strength: tendencyStrength 
+            } : null,
+            typesWithPercentage
+        );
+    }
+    
+    // 应用修饰标签
+    applyModifierTags(primaryType) {
+        let modifiedType = primaryType;
+        const modifiers = [];
+        
+        // 检查关键题目
+        for (const [key, questionId] of Object.entries(KeyModifierQuestions)) {
+            const answerIndex = this.userAnswers[questionId];
+            
+            if (answerIndex !== null && answerIndex >= 0) {
+                const option = Questions[questionId].options[answerIndex];
+                
+                switch (key) {
+                    case 'APPEARANCE':
+                        if (option.text.includes("比较看重颜值") || option.text.includes("很重要")) {
+                            modifiers.push(ModifierTags.APPEARANCE_EMPHASIS);
+                        }
+                        break;
+                    case 'CEREMONY':
+                        if (option.text.includes("非常重要")) {
+                            modifiers.push(ModifierTags.CEREMONY_EMPHASIS);
+                        }
+                        break;
+                    case 'INCOME':
+                        if (option.text.includes("很重要")) {
+                            modifiers.push(ModifierTags.ECONOMIC_SECURITY);
+                        }
+                        break;
+                    case 'CHILDREN':
+                        if (option.text.includes("一定要有孩子")) {
+                            modifiers.push(ModifierTags.FAMILY_ORIENTED);
+                        }
+                        break;
+                }
+            }
+        }
+        
+        // 添加修饰标签
+        if (modifiers.length > 0) {
+            // 只取第一个修饰标签，避免过长
+            modifiedType += modifiers[0];
+        }
+        
+        return modifiedType;
+    }
+    
+    // 创建结果对象
+    createResultObject(primary, secondary, allTypes) {
+        return {
+            primaryType: {
+                name: primary.type,
+                score: primary.score,
+                percentage: primary.percentage
+            },
+            secondaryType: secondary,
+            allTypes: allTypes,
+            dimensionScores: this.calculateDimensionScores(),
+            keyInsights: this.generateKeyInsights()
+        };
+    }
+    
+    // 计算维度分数
+    calculateDimensionScores() {
+        const dimensionScores = {};
+        
+        for (const dimension of TestDimensions) {
+            dimensionScores[dimension.id] = {
+                name: dimension.name,
+                score: 0,
+                maxScore: 0
+            };
+        }
+        
+        // 计算每个维度的得分
+        for (let i = 0; i < Questions.length; i++) {
+            const question = Questions[i];
+            const answerIndex = this.userAnswers[i];
+            
+            if (answerIndex !== null && answerIndex >= 0) {
+                const option = question.options[answerIndex];
+                const dimension = TestDimensions[question.dimension];
+                
+                // 计算选项在该维度的平均分
+                let optionScore = 0;
+                let count = 0;
+                for (const type in option.scores) {
+                    optionScore += option.scores[type];
+                    count++;
+                }
+                
+                if (count > 0) {
+                    dimensionScores[dimension.id].score += (optionScore / count) * dimension.weight;
+                }
+            }
+        }
+        
+        // 计算百分比
+        for (const dimId in dimensionScores) {
+            const maxPossible = 5 * 5; // 每道题最高5分，每个维度最多5题
+            dimensionScores[dimId].percentage = Math.min(100, 
+                Math.round((dimensionScores[dimId].score / maxPossible) * 100));
+        }
+        
+        return dimensionScores;
+    }
+    
+    // 生成关键洞察
+    generateKeyInsights() {
+        const insights = [];
+        
+        // 分析用户的选择模式
+        const answeredCount = this.userAnswers.filter(a => a !== null).length;
+        if (answeredCount < Questions.length * 0.8) {
+            insights.push({
+                type: 'warning',
+                text: '您跳过了部分题目，这可能会影响结果的准确性。'
+            });
+        }
+        
+        // 检查是否有明显矛盾的选择
+        const consistencyScore = this.calculateConsistency();
+        if (consistencyScore < 0.6) {
+            insights.push({
+                type: 'info',
+                text: '您的选择在多个维度上呈现多样性，表明您对伴侣的期待较为开放和包容。'
+            });
+        }
+        
+        return insights;
+    }
+    
+    // 计算选择一致性
+    calculateConsistency() {
+        // 简化的计算方法：检查相邻题目是否选择了相似倾向的选项
+        let consistentPairs = 0;
+        let totalPairs = 0;
+        
+        for (let i = 0; i < Questions.length - 1; i++) {
+            const currentAnswer = this.userAnswers[i];
+            const nextAnswer = this.userAnswers[i + 1];
+            
+            if (currentAnswer !== null && nextAnswer !== null) {
+                totalPairs++;
+                
+                // 检查是否属于同一维度
+                if (Questions[i].dimension === Questions[i + 1].dimension) {
+                    // 简单的一致性检查：是否选择了相似位置的选项
+                    if (Math.abs(currentAnswer - nextAnswer) <= 1) {
+                        consistentPairs++;
+                    }
+                }
+            }
+        }
+        
+        return totalPairs > 0 ? consistentPairs / totalPairs : 1;
+    }
+    
+    // 获取用户答案统计
+    getAnswerStatistics() {
+        const answered = this.userAnswers.filter(a => a !== null).length;
+        const skipped = this.userAnswers.filter(a => a === null).length;
+        
+        return {
+            total: Questions.length,
+            answered,
+            skipped,
+            completionRate: Math.round((answered / Questions.length) * 100)
+        };
+    }
+}
 
-// 维度显示顺序
-const DIMENSION_ORDER = ["personality", "communication", "emotional", "values", "lifestyle", "relationship"];
-
-// 测试配置
-const TEST_CONFIG = {
-    totalQuestions: QUESTIONS.length,
-    maxScorePerQuestion: 4,
-    minScorePerQuestion: 1,
-    dimensions: Object.keys(DIMENSIONS).length,
-    passingScore: 60, // 及格分数（百分比）
-    excellentScore: 85 // 优秀分数（百分比）
-};
-
-// 导出到全局作用域
-window.QUESTIONS = QUESTIONS;
-window.DIMENSIONS = DIMENSIONS;
-window.DIMENSION_ORDER = DIMENSION_ORDER;
-window.TEST_CONFIG = TEST_CONFIG;
+// 导出
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        TestResultTypes,
+        TestDimensions,
+        Questions,
+        IdealPartnerCalculator
+    };
+}
